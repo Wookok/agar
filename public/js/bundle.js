@@ -9,6 +9,7 @@ var CManager = function(gameConfig){
 	this.user = null;
 	//all users
 	this.users = [];
+	this.foods = [];
 };
 
 CManager.prototype = {
@@ -28,6 +29,12 @@ CManager.prototype = {
 			this.users[userDatas[index].objectID].changeState(userDatas[index].currentState);
 		}
 	},
+	setFoods : function(foodsDatas){
+		for(var i =0; i<Object.keys(foodsDatas).length; i++){
+			foodsDatas[i].position = util.worldToLocalPosition(foodsDatas[i].position, this.gameConfig.userOffset);
+			this.foods.push(foodsDatas[i]);
+		}
+	},
 	kickUser : function(objID){
 		if(!(objID in this.users)){
 			console.log("user already out");
@@ -42,7 +49,6 @@ CManager.prototype = {
 		if(this.checkUserAtUsers(userData)){
 			this.users[userData.objectID].position = util.worldToLocalPosition(userData.position, this.gameConfig.userOffset);
 			this.users[userData.objectID].targetPosition = util.worldToLocalPosition(userData.targetPosition, this.gameConfig.userOffset);
-
 			// this.users[userData.objectID].speed.x = userData.speed.x;
 			// this.users[userData.objectID].speed.y = userData.speed.y;
 
@@ -111,6 +117,10 @@ CManager.prototype = {
 				console.log('can`t find user data');
 			}
 		}
+		for(var i=0; i<Object.keys(this.foods).length; i++){
+			this.foods[i].position.x -= this.user.speed.x;
+			this.foods[i].position.y -= this.user.speed.y;
+		}
 	},
 	revisionUserPos : function(revisionX, revisionY){
 		for(var index in this.users){
@@ -120,12 +130,9 @@ CManager.prototype = {
 				}
 			}
 		}
-		for(var index in this.obstacles){
-			this.obstacles[index].localPosition.x += revisionX;
-			this.obstacles[index].localPosition.y += revisionY;
-
-			// this.obstacles[index].staticEle.x += revisionX;
-			// this.obstacles[index].staticEle.y += revisionY;
+		for(var i=0; i<Object.keys(this.foods).length; i++){
+			this.foods[i].position.x += revisionX;
+			this.foods[i].position.y += revisionY;
 		}
 	},
 	revisionAllObj : function(revisionX, revisionY){
@@ -134,12 +141,9 @@ CManager.prototype = {
 				this.users[index].addPosAndTargetPos(revisionX, revisionY);
 			}
 		}
-		for(var index in this.obstacles){
-			this.obstacles[index].localPosition.x += revisionX;
-			this.obstacles[index].localPosition.y += revisionY;
-
-			// this.obstacles[index].staticEle.x += revisionX;
-			// this.obstacles[index].staticEle.y += revisionY;
+		for(var i=0; i<Object.keys(this.foods).length; i++){
+			this.foods[i].position.x += revisionX;
+			this.foods[i].position.y += revisionY;
 		}
 	},
 	// set this client user
@@ -296,17 +300,6 @@ module.exports = User;
 
 },{"../public/util.js":5}],3:[function(require,module,exports){
 module.exports={
-  "USER_BODY_SRC" : "../images/CharBase.svg",
-  "USER_BODY_SIZE" : 64,
-  "USER_HAND_SRC" : "../images/CharHand.svg",
-  "USER_HAND_SIZE" : 64,
-  "GRID_SRC" : "../images/map-grass.png",
-  "GRID_SIZE" : 60,
-  "GRID_IMG_SIZE" : 58
-}
-
-},{}],4:[function(require,module,exports){
-module.exports={
   "INTERVAL" : 30,
 
   "CANVAS_MAX_SIZE" : {"width" : 11200 , "height" : 11200},
@@ -325,7 +318,24 @@ module.exports={
   "GAME_STATE_START_SCENE" : 1,
   "GAME_STATE_GAME_START" : 2,
   "GAME_STATE_GAME_ON" : 3,
-  "GAME_STATE_GAME_END" : 4
+  "GAME_STATE_GAME_END" : 4,
+
+  "FOOD_MIN_COUNT" : 1000,
+  "FOOD_ADD_PER_USER" : 5,
+  "FOOD_MIN_RADIUS" : 20,
+  "FOOD_MAX_RADIUS" : 50,
+  "FOOD_RANGE_WITH_OTHERS" : 10
+}
+
+},{}],4:[function(require,module,exports){
+module.exports={
+  "USER_BODY_SRC" : "../images/CharBase.svg",
+  "USER_BODY_SIZE" : 64,
+  "USER_HAND_SRC" : "../images/CharHand.svg",
+  "USER_HAND_SIZE" : 64,
+  "GRID_SRC" : "../images/map-grass.png",
+  "GRID_SIZE" : 60,
+  "GRID_IMG_SIZE" : 58
 }
 
 },{}],5:[function(require,module,exports){
@@ -449,6 +459,32 @@ exports.setTargetDirection = function(){
   }
 };
 
+//check obstacle collision
+exports.checkCircleCollision = function(tree, posX, posY, radius, id){
+  var returnVal = [];
+  var obj = {x : posX, y: posY, width:radius * 2, height: radius * 2, id: id};
+  tree.onCollision(obj, function(item){
+    if(obj.id !== item.id){
+      console.log(obj);
+      console.log(item);
+      var objCenterX = obj.x + obj.width/2;
+      var objCenterY = obj.y + obj.height/2;
+
+      var itemCenterX = item.x + item.width/2;
+      var itemCenterY = item.y + item.height/2;
+
+      // check sum of radius with item`s distance
+      var distSquareDiff = Math.pow(obj.width/2 + item.width/2,2) - Math.pow(itemCenterX - objCenterX,2) - Math.pow(itemCenterY - objCenterY,2);
+
+      if(distSquareDiff > 0 ){
+        //collision occured
+        returnVal.push(item);
+      }
+    }
+  });
+  return returnVal;
+};
+
 //coordinate transform
 exports.localToWorldPosition = function(position, offset){
   var newPosition = {
@@ -496,7 +532,7 @@ exports.calculateOffset = function(user, canvasSize){
   return newOffset;
 };
 
-},{"./gameConfig.json":4}],6:[function(require,module,exports){
+},{"./gameConfig.json":3}],6:[function(require,module,exports){
 // inner Modules
 var util = require('../../modules/public/util.js');
 var User = require('../../modules/client/CUser.js');
@@ -623,10 +659,9 @@ function setBaseSetting(){
   Manager = new CManager(gameConfig);
 
   // resource 관련
-  resource = require('../../modules/client/resource.json');
+  resource = require('../../modules/public/resource.json');
 
   userImage = new Image();
-  userHand = new Image();
   grid = new Image();
   userImage.src = resource.USER_BODY_SRC;
   grid.src = resource.GRID_SRC;
@@ -685,6 +720,7 @@ function drawGame(){
 
   drawScreen();
   drawGrid();
+  drawFoods();
   drawUser();
 };
 // socket connect and server response configs
@@ -692,8 +728,9 @@ function setupSocket(){
   socket = io();
 
   //change state game on
-  socket.on('resStartGame', function(datas){
-    Manager.setUsers(datas);
+  socket.on('resStartGame', function(userDatas, foodsDatas){
+    Manager.setUsers(userDatas);
+    Manager.setFoods(foodsDatas);
     Manager.synchronizeUser(gameConfig.userID);
 
     console.log(Manager.users);
@@ -748,7 +785,17 @@ function drawUser(){
     ctx.restore();
   }
 };
-
+function drawFoods(){
+  for(var i=0; i<Object.keys(Manager.foods).length; i++){
+    ctx.beginPath();
+    ctx.fillStyle = Manager.foods[i].color;
+    var centerX = Manager.foods[i].position.x + Manager.foods[i].size.width/2;
+    var centerY = Manager.foods[i].position.y + Manager.foods[i].size.height/2;
+    ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.closePath();
+  }
+};
 function drawGrid(){
   //draw boundary
 
@@ -771,7 +818,6 @@ function canvasAddEvent(){
       x : e.clientX,
       y : e.clientY
     }
-    console.log(targetPosition);
     var worldTargetPosition = util.localToWorldPosition(targetPosition, gameConfig.userOffset);
     socket.emit('reqMove', worldTargetPosition);
   }, false);
@@ -788,4 +834,4 @@ function revisionUserPos(userData){
 };
 update();
 
-},{"../../modules/client/CManager.js":1,"../../modules/client/CUser.js":2,"../../modules/client/resource.json":3,"../../modules/public/gameConfig.json":4,"../../modules/public/util.js":5}]},{},[6]);
+},{"../../modules/client/CManager.js":1,"../../modules/client/CUser.js":2,"../../modules/public/gameConfig.json":3,"../../modules/public/resource.json":4,"../../modules/public/util.js":5}]},{},[6]);

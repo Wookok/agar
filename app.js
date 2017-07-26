@@ -49,10 +49,11 @@ io.on('connection', function(socket){
     socket.broadcast.emit('userJoined', userData);
 
     var userDatas = GM.updateDataSettings();
+    var foodsDatas = GM.updateFoodsDataSettings();
     console.log(userDatas);
 
     socket.emit('setSyncUser', userData);
-    socket.emit('resStartGame', userDatas);
+    socket.emit('resStartGame', userDatas, foodsDatas);
   });
 
   socket.on('reqMove', function(targetPosition, localOffset){

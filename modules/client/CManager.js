@@ -8,6 +8,7 @@ var CManager = function(gameConfig){
 	this.user = null;
 	//all users
 	this.users = [];
+	this.foods = [];
 };
 
 CManager.prototype = {
@@ -27,6 +28,12 @@ CManager.prototype = {
 			this.users[userDatas[index].objectID].changeState(userDatas[index].currentState);
 		}
 	},
+	setFoods : function(foodsDatas){
+		for(var i =0; i<Object.keys(foodsDatas).length; i++){
+			foodsDatas[i].position = util.worldToLocalPosition(foodsDatas[i].position, this.gameConfig.userOffset);
+			this.foods.push(foodsDatas[i]);
+		}
+	},
 	kickUser : function(objID){
 		if(!(objID in this.users)){
 			console.log("user already out");
@@ -41,7 +48,6 @@ CManager.prototype = {
 		if(this.checkUserAtUsers(userData)){
 			this.users[userData.objectID].position = util.worldToLocalPosition(userData.position, this.gameConfig.userOffset);
 			this.users[userData.objectID].targetPosition = util.worldToLocalPosition(userData.targetPosition, this.gameConfig.userOffset);
-
 			// this.users[userData.objectID].speed.x = userData.speed.x;
 			// this.users[userData.objectID].speed.y = userData.speed.y;
 
@@ -110,6 +116,10 @@ CManager.prototype = {
 				console.log('can`t find user data');
 			}
 		}
+		for(var i=0; i<Object.keys(this.foods).length; i++){
+			this.foods[i].position.x -= this.user.speed.x;
+			this.foods[i].position.y -= this.user.speed.y;
+		}
 	},
 	revisionUserPos : function(revisionX, revisionY){
 		for(var index in this.users){
@@ -119,12 +129,9 @@ CManager.prototype = {
 				}
 			}
 		}
-		for(var index in this.obstacles){
-			this.obstacles[index].localPosition.x += revisionX;
-			this.obstacles[index].localPosition.y += revisionY;
-
-			// this.obstacles[index].staticEle.x += revisionX;
-			// this.obstacles[index].staticEle.y += revisionY;
+		for(var i=0; i<Object.keys(this.foods).length; i++){
+			this.foods[i].position.x += revisionX;
+			this.foods[i].position.y += revisionY;
 		}
 	},
 	revisionAllObj : function(revisionX, revisionY){
@@ -133,12 +140,9 @@ CManager.prototype = {
 				this.users[index].addPosAndTargetPos(revisionX, revisionY);
 			}
 		}
-		for(var index in this.obstacles){
-			this.obstacles[index].localPosition.x += revisionX;
-			this.obstacles[index].localPosition.y += revisionY;
-
-			// this.obstacles[index].staticEle.x += revisionX;
-			// this.obstacles[index].staticEle.y += revisionY;
+		for(var i=0; i<Object.keys(this.foods).length; i++){
+			this.foods[i].position.x += revisionX;
+			this.foods[i].position.y += revisionY;
 		}
 	},
 	// set this client user

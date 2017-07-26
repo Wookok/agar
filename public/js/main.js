@@ -185,6 +185,7 @@ function drawGame(){
 
   drawScreen();
   drawGrid();
+  drawFoods();
   drawUser();
 };
 // socket connect and server response configs
@@ -192,8 +193,9 @@ function setupSocket(){
   socket = io();
 
   //change state game on
-  socket.on('resStartGame', function(datas){
-    Manager.setUsers(datas);
+  socket.on('resStartGame', function(userDatas, foodsDatas){
+    Manager.setUsers(userDatas);
+    Manager.setFoods(foodsDatas);
     Manager.synchronizeUser(gameConfig.userID);
 
     console.log(Manager.users);
@@ -248,7 +250,17 @@ function drawUser(){
     ctx.restore();
   }
 };
-
+function drawFoods(){
+  for(var i=0; i<Object.keys(Manager.foods).length; i++){
+    ctx.beginPath();
+    ctx.fillStyle = Manager.foods[i].color;
+    var centerX = Manager.foods[i].position.x + Manager.foods[i].size.width/2;
+    var centerY = Manager.foods[i].position.y + Manager.foods[i].size.height/2;
+    ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.closePath();
+  }
+};
 function drawGrid(){
   //draw boundary
 
@@ -271,7 +283,6 @@ function canvasAddEvent(){
       x : e.clientX,
       y : e.clientY
     }
-    console.log(targetPosition);
     var worldTargetPosition = util.localToWorldPosition(targetPosition, gameConfig.userOffset);
     socket.emit('reqMove', worldTargetPosition);
   }, false);

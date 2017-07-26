@@ -2,6 +2,7 @@ var config = require('../../config.json');
 var gameConfig = require('../public/gameConfig.json');
 var util = require('../public/util.js');
 var QuadTree = require('quadtree-lib');
+var Food = require('./Food.js');
 
 var INTERVAL_TIMER = 1000/gameConfig.INTERVAL;
 
@@ -31,12 +32,21 @@ GameManager.prototype.start = function(){
   this.updateGame();
 };
 GameManager.prototype.mapSetting = function(){
-  //make Foods
-  //set random position
-  //set random color
-  //set random objectID
-  //set random weight
-  //push to array
+  for(var i=0; i<gameConfig.FOOD_MIN_COUNT; i++){
+    //make Foods
+    var randomID = generateRandomUniqueID('F', this.foods);
+    var food = new Food(randomID);
+    var randomRadius = generateRandomRadius(gameConfig.FOOD_MIN_RADIUS, gameConfig.FOOD_MAX_RADIUS);
+    var randomPos = generateRandomPos(this.staticTree, 0, 0, gameConfig.CANVAS_MAX_SIZE.width, gameConfig.CANVAS_MAX_SIZE.height,
+                                      randomRadius, gameConfig.FOOD_RANGE_WITH_OTHERS, randomID);
+    var mass = radiusToMass(randomRadius);
+    var randomColor = generateRandomColor();
+
+    food.initFood(randomPos, randomRadius, mass, randomColor);
+    food.setStaticEle();
+    // this.staticTree.push(food.staticEle);
+    this.foods.push(food);
+  }
 };
 GameManager.prototype.updateGame = function(){
   if(this.updateInteval === null){
@@ -76,16 +86,17 @@ GameManager.prototype.updateUser = function(user){
 //user initialize
 GameManager.prototype.initializeUser = function(user){
   // check ID is unique
-  var IDisUnique = false;
-  while(!IDisUnique){
-    var randomID = generateRandomID('U');
-    IDisUnique = true;
-    for(var index in this.users){
-      if(randomID == this.users[index].objectID){
-        IDisUnique = false;
-      }
-    }
-  }
+  var randomID = generateRandomUniqueID('U', this.users);
+  // var IDisUnique = false;
+  // while(!IDisUnique){
+  //   var randomID = generateRandomID('U');
+  //   IDisUnique = true;
+  //   for(var index in this.users){
+  //     if(randomID == this.users[index].objectID){
+  //       IDisUnique = false;
+  //     }
+  //   }
+  // }
   //initialize variables;
   user.assignID(randomID);
 
@@ -146,7 +157,22 @@ GameManager.prototype.updateDataSetting = function(user){
   };
   return updateUser;
 };
-
+GameManager.prototype.updateFoodsDataSettings = function(){
+  var foodsDatas = [];
+  for(var i =0; i<this.foods.length; i++){
+    var food = {
+      objectID : this.foods[i].objectID,
+      color : this.foods[i].color,
+      position : this.foods[i].position,
+      size : this.foods[i].size
+    }
+    foodsDatas.push(food);
+  }
+  return foodsDatas;
+};
+GameManager.prototype.updateFoodDataSetting = function(foodID){
+  return foodID;
+}
 function updateIntervalHandler(){
   for(var i=0; i<this.colliderEles.length; i++){
     var tempCollider = this.colliderEles[i];
@@ -178,15 +204,56 @@ function updateIntervalHandler(){
     this.userEles.push(this.users[index].userTreeEle);
   }
   //test
-  for(var index in this.users){
-    this.colliderEles.push(this.users[index].userTreeEle);
-  }
+
   //put users data to tree
   this.userTree.pushAll(this.userEles);
 };
-
+function generateRandomUniqueID(prefix, uniqueCheckArray){
+  var IDisUnique = false;
+  while(!IDisUnique){
+    var randomID = generateRandomID(prefix);
+    IDisUnique = true;
+    for(var index in uniqueCheckArray){
+      if(randomID == uniqueCheckArray[index].objectID){
+        IDisUnique = false;
+      }
+    }
+  }
+  return randomID;
+}
 function generateRandomID(prefix){
   var output = prefix;
+  for(var i=0; i<6; i++){
+    output += Math.floor(Math.random()*16).toString(16);
+  }
+  return output;
+};
+function generateRandomPos(checkTree, minX, minY, maxX, maxY, radius, diffRangeWithOthers, objID){
+  var isCollision = true;
+  while(isCollision){
+    isCollision = false;
+    var pos = {
+      x : Math.floor(Math.random()*(maxX - minX) + minX),
+      y : Math.floor(Math.random()*(maxY - minY) + minY)
+    }
+    var collisionObjs = util.checkCircleCollision(checkTree, pos.x, pos.y, radius + diffRangeWithOthers, objID);
+    if(collisionObjs.length > 1){
+        isCollision = true;
+    }
+  }
+  return pos;
+};
+function generateRandomRadius(minRadius, maxRadius){
+  return Math.floor(Math.random()*(maxRadius - minRadius) + minRadius);
+};
+function radiusToMass(radius){
+  return Math.pow((radius-4)/6,2);
+};
+function massToRadius(mass){
+  return 4 + Math.sqrt(mass) * 6;
+};
+function generateRandomColor(){
+  var output = "#";
   for(var i=0; i<6; i++){
     output += Math.floor(Math.random()*16).toString(16);
   }
