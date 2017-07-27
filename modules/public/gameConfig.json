@@ -1,8 +1,8 @@
 {
   "INTERVAL" : 30,
 
-  "CANVAS_MAX_SIZE" : {"width" : 11200 , "height" : 11200},
-  "CANVAS_MAX_LOCAL_SIZE" : {"width" : 1600, "height" : 1600},
+  "CANVAS_MAX_SIZE" : {"width" : 5600 , "height" : 5600},
+  "CANVAS_MAX_LOCAL_SIZE" : {"width" : 1600, "height" : 1000},
 
   "OBJECT_STATE_IDLE" : 0,
   "OBJECT_STATE_MOVE" : 1,
@@ -19,9 +19,9 @@
   "GAME_STATE_GAME_ON" : 3,
   "GAME_STATE_GAME_END" : 4,
 
-  "FOOD_MIN_COUNT" : 200,
+  "FOOD_MIN_COUNT" : 700,
   "FOOD_ADD_PER_USER" : 5,
   "FOOD_MIN_RADIUS" : 20,
-  "FOOD_MAX_RADIUS" : 50,
+  "FOOD_MAX_RADIUS" : 30,
   "FOOD_RANGE_WITH_OTHERS" : 10
 }

@@ -24,6 +24,7 @@ Food.prototype.setStaticEle = function(){
   this.staticEle.y = this.position.y;
   this.staticEle.width = this.size.width;
   this.staticEle.height = this.size.height;
+  this.staticEle.mass = this.mass;
 };
 
 module.exports = Food;

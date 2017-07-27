@@ -3,7 +3,7 @@ var util = require('../public/util.js');
 
 var gameConfig = require('../public/gameConfig.json');
 
-var INTERVAL_TIMER = 1000/gameConfig.INTERVAL;
+var INTERVAL_TIMER = Math.floor(1000/gameConfig.INTERVAL);
 
 function LivingEntity(){
   GameObject.call(this);
@@ -53,7 +53,6 @@ LivingEntity.prototype.changeState = function(newState){
 LivingEntity.prototype.update = function(){
   this.updateInterval = setInterval(this.updateFunction, INTERVAL_TIMER);
 };
-
 //rotate before move or fire skill etc..
 LivingEntity.prototype.rotate = function(){
   util.rotate.call(this);

@@ -28,7 +28,6 @@ var User = function(userData, gameConfig){
 
   this.onMoveOffset = null;
 };
-
 User.prototype = {
   changeState : function(newState){
 
@@ -49,7 +48,7 @@ User.prototype = {
     this.update();
   },
   update : function(){
-    var INTERVAL_TIMER = 1000/this.gameConfig.INTERVAL;
+    var INTERVAL_TIMER = Math.floor(1000/this.gameConfig.INTERVAL);
     this.updateInterval = setInterval(this.updateFunction, INTERVAL_TIMER);
   },
   setCenter : function(){

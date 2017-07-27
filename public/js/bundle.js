@@ -29,10 +29,23 @@ CManager.prototype = {
 			this.users[userDatas[index].objectID].changeState(userDatas[index].currentState);
 		}
 	},
+	updateMass : function(userID, userMass){
+		if(Object.keys(this.users).indexOf(userID) !== -1){
+			this.users[userID].mass = userMass;
+		}
+	},
 	setFoods : function(foodsDatas){
 		for(var i =0; i<Object.keys(foodsDatas).length; i++){
 			foodsDatas[i].position = util.worldToLocalPosition(foodsDatas[i].position, this.gameConfig.userOffset);
 			this.foods.push(foodsDatas[i]);
+		}
+	},
+	deleteFood : function(foodID){
+		for(var i=0; i<Object.keys(this.foods).length; i++){
+			if(this.foods[i].objectID === foodID){
+				this.foods.splice(i, 1);
+				return;
+			}
 		}
 	},
 	kickUser : function(objID){
@@ -216,7 +229,6 @@ var User = function(userData, gameConfig){
 
   this.onMoveOffset = null;
 };
-
 User.prototype = {
   changeState : function(newState){
 
@@ -237,7 +249,7 @@ User.prototype = {
     this.update();
   },
   update : function(){
-    var INTERVAL_TIMER = 1000/this.gameConfig.INTERVAL;
+    var INTERVAL_TIMER = Math.floor(1000/this.gameConfig.INTERVAL);
     this.updateInterval = setInterval(this.updateFunction, INTERVAL_TIMER);
   },
   setCenter : function(){
@@ -302,8 +314,8 @@ module.exports = User;
 module.exports={
   "INTERVAL" : 30,
 
-  "CANVAS_MAX_SIZE" : {"width" : 11200 , "height" : 11200},
-  "CANVAS_MAX_LOCAL_SIZE" : {"width" : 1600, "height" : 1600},
+  "CANVAS_MAX_SIZE" : {"width" : 5600 , "height" : 5600},
+  "CANVAS_MAX_LOCAL_SIZE" : {"width" : 1600, "height" : 1000},
 
   "OBJECT_STATE_IDLE" : 0,
   "OBJECT_STATE_MOVE" : 1,
@@ -320,7 +332,7 @@ module.exports={
   "GAME_STATE_GAME_ON" : 3,
   "GAME_STATE_GAME_END" : 4,
 
-  "FOOD_MIN_COUNT" : 1000,
+  "FOOD_MIN_COUNT" : 700,
   "FOOD_ADD_PER_USER" : 5,
   "FOOD_MIN_RADIUS" : 20,
   "FOOD_MAX_RADIUS" : 50,
@@ -465,8 +477,6 @@ exports.checkCircleCollision = function(tree, posX, posY, radius, id){
   var obj = {x : posX, y: posY, width:radius * 2, height: radius * 2, id: id};
   tree.onCollision(obj, function(item){
     if(obj.id !== item.id){
-      console.log(obj);
-      console.log(item);
       var objCenterX = obj.x + obj.width/2;
       var objCenterY = obj.y + obj.height/2;
 
@@ -752,12 +762,17 @@ function setupSocket(){
   });
 
   socket.on('resMove', function(userData){
+    var startTime = Date.now();
     if(userData.objectID === gameConfig.userID){
       revisionUserPos(userData);
     }
-    console.log(userData.objectID + ' move start');
     Manager.updateUserData(userData);
     Manager.moveUser(userData);
+  });
+
+  socket.on('deleteFoodAndAddUserMass', function(foodID, userID, userMass){
+    Manager.deleteFood(foodID);
+    Manager.updateMass(userID, userMass);
   });
 
   socket.on('userLeave', function(objID){
@@ -789,11 +804,14 @@ function drawFoods(){
   for(var i=0; i<Object.keys(Manager.foods).length; i++){
     ctx.beginPath();
     ctx.fillStyle = Manager.foods[i].color;
-    var centerX = Manager.foods[i].position.x + Manager.foods[i].size.width/2;
-    var centerY = Manager.foods[i].position.y + Manager.foods[i].size.height/2;
-    ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.closePath();
+    if(Manager.foods[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.foods[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
+      && Manager.foods[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.foods[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
+        var centerX = Manager.foods[i].position.x + Manager.foods[i].size.width/2;
+        var centerY = Manager.foods[i].position.y + Manager.foods[i].size.height/2;
+        ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+      }
   }
 };
 function drawGrid(){

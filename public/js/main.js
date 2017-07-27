@@ -217,12 +217,17 @@ function setupSocket(){
   });
 
   socket.on('resMove', function(userData){
+    var startTime = Date.now();
     if(userData.objectID === gameConfig.userID){
       revisionUserPos(userData);
     }
-    console.log(userData.objectID + ' move start');
     Manager.updateUserData(userData);
     Manager.moveUser(userData);
+  });
+
+  socket.on('deleteFoodAndAddUserMass', function(foodID, userID, userMass){
+    Manager.deleteFood(foodID);
+    Manager.updateMass(userID, userMass);
   });
 
   socket.on('userLeave', function(objID){
@@ -254,11 +259,14 @@ function drawFoods(){
   for(var i=0; i<Object.keys(Manager.foods).length; i++){
     ctx.beginPath();
     ctx.fillStyle = Manager.foods[i].color;
-    var centerX = Manager.foods[i].position.x + Manager.foods[i].size.width/2;
-    var centerY = Manager.foods[i].position.y + Manager.foods[i].size.height/2;
-    ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.closePath();
+    if(Manager.foods[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.foods[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
+      && Manager.foods[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.foods[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
+        var centerX = Manager.foods[i].position.x + Manager.foods[i].size.width/2;
+        var centerY = Manager.foods[i].position.y + Manager.foods[i].size.height/2;
+        ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+      }
   }
 };
 function drawGrid(){

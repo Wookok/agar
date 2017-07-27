@@ -33,6 +33,10 @@ io.on('connection', function(socket){
   var user = new User(socket.id);
   var updateUserInterval = false;
 
+  GM.onDeleteFood = function(foodID, userID, userMass){
+    io.sockets.emit('deleteFoodAndAddUserMass', foodID, userID, userMass);
+  };
+
   socket.on('reqStartGame', function(){
 
     // user init and join game
@@ -62,7 +66,7 @@ io.on('connection', function(socket){
 
     var data = GM.updateDataSetting(user);
     io.sockets.emit('resMove', data);
-  })
+  });
 
   socket.on('disconnect', function(){
     if(user.constructor === User){

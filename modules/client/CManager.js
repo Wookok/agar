@@ -28,10 +28,23 @@ CManager.prototype = {
 			this.users[userDatas[index].objectID].changeState(userDatas[index].currentState);
 		}
 	},
+	updateMass : function(userID, userMass){
+		if(Object.keys(this.users).indexOf(userID) !== -1){
+			this.users[userID].mass = userMass;
+		}
+	},
 	setFoods : function(foodsDatas){
 		for(var i =0; i<Object.keys(foodsDatas).length; i++){
 			foodsDatas[i].position = util.worldToLocalPosition(foodsDatas[i].position, this.gameConfig.userOffset);
 			this.foods.push(foodsDatas[i]);
+		}
+	},
+	deleteFood : function(foodID){
+		for(var i=0; i<Object.keys(this.foods).length; i++){
+			if(this.foods[i].objectID === foodID){
+				this.foods.splice(i, 1);
+				return;
+			}
 		}
 	},
 	kickUser : function(objID){

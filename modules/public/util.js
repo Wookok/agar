@@ -124,8 +124,6 @@ exports.checkCircleCollision = function(tree, posX, posY, radius, id){
   var obj = {x : posX, y: posY, width:radius * 2, height: radius * 2, id: id};
   tree.onCollision(obj, function(item){
     if(obj.id !== item.id){
-      console.log(obj);
-      console.log(item);
       var objCenterX = obj.x + obj.width/2;
       var objCenterY = obj.y + obj.height/2;
 
@@ -134,7 +132,6 @@ exports.checkCircleCollision = function(tree, posX, posY, radius, id){
 
       // check sum of radius with item`s distance
       var distSquareDiff = Math.pow(obj.width/2 + item.width/2,2) - Math.pow(itemCenterX - objCenterX,2) - Math.pow(itemCenterY - objCenterY,2);
-
       if(distSquareDiff > 0 ){
         //collision occured
         returnVal.push(item);
