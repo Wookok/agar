@@ -55,6 +55,11 @@ User.prototype = {
     this.center.x = this.position.x + this.size.width/2,
     this.center.y = this.position.y + this.size.height/2
   },
+  setSize : function(radius){
+    this.size.width = radius * 2;
+    this.size.height = radius * 2;
+    this.setCenter();
+  },
   rotate : function(){
     util.rotate.call(this);
   },

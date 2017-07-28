@@ -225,9 +225,12 @@ function setupSocket(){
     Manager.moveUser(userData);
   });
 
-  socket.on('deleteFoodAndAddUserMass', function(foodID, userID, userMass){
+  socket.on('createFoods', function(foodsDatas){
+    Manager.createFoods(foodsDatas);
+  });
+  socket.on('deleteFoodAndAddUserMass', function(foodID, userID, userRadius){
     Manager.deleteFood(foodID);
-    Manager.updateMass(userID, userMass);
+    Manager.updateRadius(userID, userRadius);
   });
 
   socket.on('userLeave', function(objID){
@@ -246,21 +249,30 @@ function drawUser(){
   for(var index in Manager.users){
     var radian = Manager.users[index].direction * radianFactor;
 
-    ctx.save();
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.translate(Manager.users[index].center.x, Manager.users[index].center.y);
-    ctx.rotate(radian);
-    ctx.drawImage(userImage, 0, 0, 128, 128,-Manager.users[index].size.width/2 * gameConfig.scaleFactor, -Manager.users[index].size.height/2 * gameConfig.scaleFactor, 128 * gameConfig.scaleFactor, 128 * gameConfig.scaleFactor);
+    ctx.beginPath();
+    ctx.fillStyle = '#aaaaaa';
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 5;
+    ctx.arc(Manager.users[index].center.x, Manager.users[index].center.y, Manager.users[index].size.width/2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fill();
+    ctx.closePath();
 
-    ctx.restore();
+    // ctx.save();
+    // ctx.setTransform(1,0,0,1,0,0);
+    // ctx.translate(Manager.users[index].center.x, Manager.users[index].center.y);
+    // ctx.rotate(radian);
+    // ctx.drawImage(userImage, 0, 0, 128, 128,-Manager.users[index].size.width/2 * gameConfig.scaleFactor, -Manager.users[index].size.height/2 * gameConfig.scaleFactor, Manager.users[index].size.width * gameConfig.scaleFactor, Manager.users[index].size.width * gameConfig.scaleFactor);
+    //
+    // ctx.restore();
   }
 };
 function drawFoods(){
   for(var i=0; i<Object.keys(Manager.foods).length; i++){
-    ctx.beginPath();
-    ctx.fillStyle = Manager.foods[i].color;
     if(Manager.foods[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.foods[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
       && Manager.foods[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.foods[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
+        ctx.beginPath();
+        ctx.fillStyle = Manager.foods[i].color;
         var centerX = Manager.foods[i].position.x + Manager.foods[i].size.width/2;
         var centerY = Manager.foods[i].position.y + Manager.foods[i].size.height/2;
         ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);

@@ -29,12 +29,18 @@ CManager.prototype = {
 			this.users[userDatas[index].objectID].changeState(userDatas[index].currentState);
 		}
 	},
-	updateMass : function(userID, userMass){
+	updateRadius : function(userID, userRadius){
 		if(Object.keys(this.users).indexOf(userID) !== -1){
-			this.users[userID].mass = userMass;
+			this.users[userID].setSize(userRadius);
 		}
 	},
 	setFoods : function(foodsDatas){
+		for(var i =0; i<Object.keys(foodsDatas).length; i++){
+			foodsDatas[i].position = util.worldToLocalPosition(foodsDatas[i].position, this.gameConfig.userOffset);
+			this.foods.push(foodsDatas[i]);
+		}
+	},
+	createFoods : function(foodsDatas){
 		for(var i =0; i<Object.keys(foodsDatas).length; i++){
 			foodsDatas[i].position = util.worldToLocalPosition(foodsDatas[i].position, this.gameConfig.userOffset);
 			this.foods.push(foodsDatas[i]);
@@ -256,6 +262,11 @@ User.prototype = {
     this.center.x = this.position.x + this.size.width/2,
     this.center.y = this.position.y + this.size.height/2
   },
+  setSize : function(radius){
+    this.size.width = radius * 2;
+    this.size.height = radius * 2;
+    this.setCenter();
+  },
   rotate : function(){
     util.rotate.call(this);
   },
@@ -332,10 +343,10 @@ module.exports={
   "GAME_STATE_GAME_ON" : 3,
   "GAME_STATE_GAME_END" : 4,
 
-  "FOOD_MIN_COUNT" : 700,
-  "FOOD_ADD_PER_USER" : 5,
+  "FOOD_MIN_COUNT" : 300,
+  "FOOD_ADD_PER_USER" : 10,
   "FOOD_MIN_RADIUS" : 20,
-  "FOOD_MAX_RADIUS" : 50,
+  "FOOD_MAX_RADIUS" : 30,
   "FOOD_RANGE_WITH_OTHERS" : 10
 }
 
@@ -485,7 +496,6 @@ exports.checkCircleCollision = function(tree, posX, posY, radius, id){
 
       // check sum of radius with item`s distance
       var distSquareDiff = Math.pow(obj.width/2 + item.width/2,2) - Math.pow(itemCenterX - objCenterX,2) - Math.pow(itemCenterY - objCenterY,2);
-
       if(distSquareDiff > 0 ){
         //collision occured
         returnVal.push(item);
@@ -540,6 +550,12 @@ exports.calculateOffset = function(user, canvasSize){
     y : user.position.y + user.size.height/2 - canvasSize.height/2
   };
   return newOffset;
+};
+exports.massToRadius = function(mass){
+  return 4 + Math.sqrt(mass) * 6;
+};
+exports.radiusToMass = function(radius){
+  return Math.pow((radius-4)/6,2);
 };
 
 },{"./gameConfig.json":3}],6:[function(require,module,exports){
@@ -770,9 +786,12 @@ function setupSocket(){
     Manager.moveUser(userData);
   });
 
-  socket.on('deleteFoodAndAddUserMass', function(foodID, userID, userMass){
+  socket.on('createFoods', function(foodsDatas){
+    Manager.createFoods(foodsDatas);
+  });
+  socket.on('deleteFoodAndAddUserMass', function(foodID, userID, userRadius){
     Manager.deleteFood(foodID);
-    Manager.updateMass(userID, userMass);
+    Manager.updateRadius(userID, userRadius);
   });
 
   socket.on('userLeave', function(objID){
@@ -791,21 +810,30 @@ function drawUser(){
   for(var index in Manager.users){
     var radian = Manager.users[index].direction * radianFactor;
 
-    ctx.save();
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.translate(Manager.users[index].center.x, Manager.users[index].center.y);
-    ctx.rotate(radian);
-    ctx.drawImage(userImage, 0, 0, 128, 128,-Manager.users[index].size.width/2 * gameConfig.scaleFactor, -Manager.users[index].size.height/2 * gameConfig.scaleFactor, 128 * gameConfig.scaleFactor, 128 * gameConfig.scaleFactor);
+    ctx.beginPath();
+    ctx.fillStyle = '#aaaaaa';
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 5;
+    ctx.arc(Manager.users[index].center.x, Manager.users[index].center.y, Manager.users[index].size.width/2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fill();
+    ctx.closePath();
 
-    ctx.restore();
+    // ctx.save();
+    // ctx.setTransform(1,0,0,1,0,0);
+    // ctx.translate(Manager.users[index].center.x, Manager.users[index].center.y);
+    // ctx.rotate(radian);
+    // ctx.drawImage(userImage, 0, 0, 128, 128,-Manager.users[index].size.width/2 * gameConfig.scaleFactor, -Manager.users[index].size.height/2 * gameConfig.scaleFactor, Manager.users[index].size.width * gameConfig.scaleFactor, Manager.users[index].size.width * gameConfig.scaleFactor);
+    //
+    // ctx.restore();
   }
 };
 function drawFoods(){
   for(var i=0; i<Object.keys(Manager.foods).length; i++){
-    ctx.beginPath();
-    ctx.fillStyle = Manager.foods[i].color;
     if(Manager.foods[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.foods[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
       && Manager.foods[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.foods[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
+        ctx.beginPath();
+        ctx.fillStyle = Manager.foods[i].color;
         var centerX = Manager.foods[i].position.x + Manager.foods[i].size.width/2;
         var centerY = Manager.foods[i].position.y + Manager.foods[i].size.height/2;
         ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);

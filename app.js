@@ -33,8 +33,15 @@ io.on('connection', function(socket){
   var user = new User(socket.id);
   var updateUserInterval = false;
 
-  GM.onDeleteFood = function(foodID, userID, userMass){
-    io.sockets.emit('deleteFoodAndAddUserMass', foodID, userID, userMass);
+  GM.onCreateFoods = function(foods){
+    var foodsDatas = [];
+    for(var i=0; i<Object.keys(foods).length; i++){
+      foodsDatas.push(GM.updateFoodDataSetting(foods[i]));
+    }
+    io.sockets.emit('createFoods', foodsDatas);
+  }
+  GM.onDeleteFood = function(foodID, userID, userRadius){
+    io.sockets.emit('deleteFoodAndAddUserMass', foodID, userID, userRadius);
   };
 
   socket.on('reqStartGame', function(){
