@@ -90,6 +90,7 @@ LivingEntity.prototype.setTargetPosition = function(newPosition){
     this.targetPosition.y = newPosition.y;
   }
 };
+
 LivingEntity.prototype.setSpeed = function(){
   util.setSpeed.call(this);
 };

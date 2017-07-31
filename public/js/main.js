@@ -201,6 +201,7 @@ function setupSocket(){
     console.log(Manager.users);
 
     canvasAddEvent();
+    documentAddEvent();
 
     changeState(gameConfig.GAME_STATE_GAME_ON);
   });
@@ -305,6 +306,14 @@ function canvasAddEvent(){
     }
     var worldTargetPosition = util.localToWorldPosition(targetPosition, gameConfig.userOffset);
     socket.emit('reqMove', worldTargetPosition);
+  }, false);
+};
+function documentAddEvent(){
+  document.addEventListener('keydown', function(e){
+    var keyCode = e.keyCode;
+    var tempPos = util.localToWorldPosition({x : 0, y : 0}, gameConfig.userOffset);
+    if(keyCode === 32){
+      socket.emit('reqSkill');
   }, false);
 };
 function revisionUserPos(userData){

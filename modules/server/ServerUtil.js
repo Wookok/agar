@@ -1,5 +1,18 @@
 var util = require('../public/util.js');
+var gameConfig = require('../public/gameConfig');
+var serverConfig = require('./serverConfig.json');
 
+exports.calcCloneSpeed = function(maxSpeed){
+  return maxSpeed * 2;
+};
+exports.calcCloneTargetPosition = function(direction, maxSpeed){
+  var unitSpeedX = Math.cos(direction) * maxSpeed;
+  var unitSpeedY = Math.sin(direction) * maxSpeed;
+  return {
+    x : unitSpeedX * serverConfig.cloneLifeTime * gameConfig.INTERVAL,
+    y : unitSpeedY * serverConfig.cloneLifeTime * gameConfig.INTERVAL
+  };
+};
 exports.massToRadius = function(mass){
   return 4 + Math.sqrt(mass) * 6;
 };

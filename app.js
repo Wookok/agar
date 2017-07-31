@@ -75,6 +75,13 @@ io.on('connection', function(socket){
     io.sockets.emit('resMove', data);
   });
 
+  socket.on('reqSkill', function(){
+    GM.fireClone(user);
+
+    var userData = GM.updateDataSetting(user);
+    
+    io.sockets.emit('resSkill', userData);
+  });
   socket.on('disconnect', function(){
     if(user.constructor === User){
       GM.stopUser(user);

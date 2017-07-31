@@ -86,13 +86,21 @@ GameManager.prototype.updateGame = function(){
     this.affectInterval = setInterval(affectIntervalHandler.bind(this), INTERVAL_TIMER);
   }
 };
+
+GameManager.prototype.fireClone = function(user){
+  user.makeClone();
+};
 //setting User for moving and move user;
 GameManager.prototype.setUserTargetAndMove = function(user, targetPosition){
   user.setTargetPosition(targetPosition);
   user.setTargetDirection();
   user.setSpeed();
 
+  user.clonesSetting();
+
   user.changeState(gameConfig.OBJECT_STATE_MOVE);
+
+  user.clonesChangeState(gameConfig.OBJECT_STATE_MOVE);
 };
 
 // user join, kick, update
@@ -126,7 +134,7 @@ GameManager.prototype.initializeUser = function(user){
   user.setSize(64,64);
   user.setPosition(10, 10);
 
-  user.setRotateSpeed(10);
+  user.setRotateSpeed(60);
   user.setMaxSpeed(10);
 };
 GameManager.prototype.stopUser = function(user){
@@ -147,6 +155,26 @@ GameManager.prototype.updateDataSettings = function(){
   var userData = [];
 
   for(var index in this.users){
+    var clonesData = [];
+    for(var i=0; i<Object.keys(this.users[index].clones).lenght; i++){
+        clonesData.push({
+          objectID : this.users[index].clones[i].objectID,
+
+          currentState : this.users[index].clones[i].currentState,
+          position : this.users[index].clones[i].position,
+          targetPosition : this.users[index].clones[i].targetPosition,
+
+          // speed : this.users[index].speed,
+          maxSpeed : this.users[index].clones[i].maxSpeed,
+
+          direction : this.users[index].clones[i].direction,
+
+          rotateSpeed :  this.users[index].clones[i].rotateSpeed,
+          // targetDirection : this.users[index].targetDirection,
+
+          size : this.users[index].clones[i].size
+        });
+    }
     var tempUser = {
       objectID : index,
 
@@ -162,7 +190,8 @@ GameManager.prototype.updateDataSettings = function(){
       rotateSpeed :  this.users[index].rotateSpeed,
       // targetDirection : this.users[index].targetDirection,
 
-      size : this.users[index].size
+      size : this.users[index].size,
+      clones : clonesData
     };
     userData.push(tempUser);
   };
@@ -170,6 +199,26 @@ GameManager.prototype.updateDataSettings = function(){
   return userData;
 };
 GameManager.prototype.updateDataSetting = function(user){
+  var clonesData = [];
+  for(var i=0; i<Object.keys(this.users.clones).lenght; i++){
+      clonesData.push({
+        objectID : this.users.clones[i].objectID,
+
+        currentState : this.users.clones[i].currentState,
+        position : this.users.clones[i].position,
+        targetPosition : this.users.clones[i].targetPosition,
+
+        // speed : this.users[index].speed,
+        maxSpeed : this.users.clones[i].maxSpeed,
+
+        direction : this.users.clones[i].direction,
+
+        rotateSpeed :  this.users.clones[i].rotateSpeed,
+        // targetDirection : this.users[index].targetDirection,
+
+        size : this.users.clones[i].size
+      });
+  }
   var updateUser = {
     objectID : user.objectID,
 
@@ -184,7 +233,8 @@ GameManager.prototype.updateDataSetting = function(user){
     rotateSpeed :  user.rotateSpeed,
     // targetDirection : user.targetDirection,
 
-    size : user.size
+    size : user.size,
+    clones : clonesData
   };
   return updateUser;
 };
