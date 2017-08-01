@@ -99,7 +99,6 @@ GameManager.prototype.setUserTargetAndMove = function(user, targetPosition){
   user.clonesSetting();
 
   user.changeState(gameConfig.OBJECT_STATE_MOVE);
-
   user.clonesChangeState(gameConfig.OBJECT_STATE_MOVE);
 };
 
@@ -156,7 +155,7 @@ GameManager.prototype.updateDataSettings = function(){
 
   for(var index in this.users){
     var clonesData = [];
-    for(var i=0; i<Object.keys(this.users[index].clones).lenght; i++){
+    for(var i=0; i<Object.keys(this.users[index].clones).length; i++){
         clonesData.push({
           objectID : this.users[index].clones[i].objectID,
 
@@ -200,24 +199,25 @@ GameManager.prototype.updateDataSettings = function(){
 };
 GameManager.prototype.updateDataSetting = function(user){
   var clonesData = [];
-  for(var i=0; i<Object.keys(this.users.clones).lenght; i++){
+  for(var i=0; i<Object.keys(user.clones).length; i++){
       clonesData.push({
-        objectID : this.users.clones[i].objectID,
+        objectID : user.clones[i].objectID,
 
-        currentState : this.users.clones[i].currentState,
-        position : this.users.clones[i].position,
-        targetPosition : this.users.clones[i].targetPosition,
+        currentState : user.clones[i].currentState,
+        position : user.clones[i].position,
+        targetPosition : user.clones[i].targetPosition,
 
         // speed : this.users[index].speed,
-        maxSpeed : this.users.clones[i].maxSpeed,
+        maxSpeed : user.clones[i].maxSpeed,
 
-        direction : this.users.clones[i].direction,
+        direction : user.clones[i].direction,
 
-        rotateSpeed :  this.users.clones[i].rotateSpeed,
+        rotateSpeed : user.clones[i].rotateSpeed,
         // targetDirection : this.users[index].targetDirection,
 
-        size : this.users.clones[i].size
+        size : user.clones[i].size
       });
+    console.log(user.clones[i].position);
   }
   var updateUser = {
     objectID : user.objectID,
@@ -236,6 +236,7 @@ GameManager.prototype.updateDataSetting = function(user){
     size : user.size,
     clones : clonesData
   };
+  console.log(updateUser.position);
   return updateUser;
 };
 GameManager.prototype.updateFoodsDataSettings = function(){

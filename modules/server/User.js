@@ -31,14 +31,20 @@ User.prototype.changeMass = function(){
 User.prototype.makeClone = function(){
   var cloneMaxSpeed = SUtil.calcCloneSpeed(this.maxSpeed);
   var targetPosition = SUtil.calcCloneTargetPosition(this.direction, cloneMaxSpeed);
-  var clone = new Clone(this, cloneMaxSpeed, targetPosition);
+  var cloneMass = this.mass/2;
+  this.changeMass();
+  var radius = SUtil.massToRadius(cloneMass);
+  var clone = new Clone(this, cloneMaxSpeed, targetPosition, cloneMass, radius);
+  clone.setCenter();
   clone.moveClone();
   this.clones.push(clone);
+  // console.log(this.clones);
 };
 User.prototype.clonesSetting = function(){
   for(var i=0; i<Object.keys(this.clones).length; i++){
     if(this.clones[i].checkChangeAble()){
-      this.clones[i].setTargetPosition(this.targetPosition);
+      this.clones[i].targetPosition = this.targetPosition;
+      // this.clones[i].setTargetPosition(this.targetPosition);
       this.clones[i].setMaxSpeed(this.maxSpeed);
       this.clones[i].setTargetDirection();
       this.clones[i].setSpeed();

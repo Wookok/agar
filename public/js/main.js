@@ -224,6 +224,8 @@ function setupSocket(){
     }
     Manager.updateUserData(userData);
     Manager.moveUser(userData);
+    Manager.moveClone(userData);
+    console.log(userData);
   });
 
   socket.on('createFoods', function(foodsDatas){
@@ -236,6 +238,10 @@ function setupSocket(){
 
   socket.on('userLeave', function(objID){
     Manager.kickUser(objID);
+  });
+  socket.on('resSkill', function(userData){
+    Manager.updateUserData(userData);
+    Manager.moveClone(userData);
   });
 };
 
@@ -259,6 +265,17 @@ function drawUser(){
     ctx.fill();
     ctx.closePath();
 
+    //draw clones
+    for(var i=0; i<Object.keys(Manager.users[index].clones).length; i++){
+      ctx.beginPath();
+      ctx.fillStyle = '#aaaaaa';
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 5;
+      ctx.arc(Manager.users[index].clones[i].center.x, Manager.users[index].clones[i].center.y, Manager.users[index].clones[i].size.width/2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fill();
+      ctx.closePath();
+    }
     // ctx.save();
     // ctx.setTransform(1,0,0,1,0,0);
     // ctx.translate(Manager.users[index].center.x, Manager.users[index].center.y);
@@ -311,9 +328,9 @@ function canvasAddEvent(){
 function documentAddEvent(){
   document.addEventListener('keydown', function(e){
     var keyCode = e.keyCode;
-    var tempPos = util.localToWorldPosition({x : 0, y : 0}, gameConfig.userOffset);
     if(keyCode === 32){
       socket.emit('reqSkill');
+    }
   }, false);
 };
 function revisionUserPos(userData){

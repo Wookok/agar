@@ -68,6 +68,8 @@ exports.move = function(){
   var distY = this.targetPosition.y - this.center.y;
 
   if(distX == 0 && distY == 0){
+    console.log('stop');
+    console.log(this);
     this.stop();
     this.changeState(gameConfig.OBJECT_STATE_IDLE);
   }
@@ -82,6 +84,7 @@ exports.move = function(){
 
   this.center.x += this.speed.x;
   this.center.y += this.speed.y;
+  console.log(this.position);
 };
 
 //must use with bind or call method

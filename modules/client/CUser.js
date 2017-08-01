@@ -19,6 +19,8 @@ var User = function(userData, gameConfig){
   this.speed = {x : 0, y : 0};
   this.targetDirection = 0;
 
+  this.clones = [];
+
   this.setCenter();
   this.setSpeed();
   this.setTargetDirection();
@@ -104,7 +106,6 @@ User.prototype = {
     this.setCenter();
   },
   stop : function(){
-    console.log('stop');
     if(this.updateInterval){
       clearInterval(this.updateInterval);
       this.updateInterval = false;

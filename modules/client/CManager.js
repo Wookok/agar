@@ -64,6 +64,7 @@ CManager.prototype = {
 
 	},
 	updateUserData : function(userData){
+		console.log(userData);
 		if(this.checkUserAtUsers(userData)){
 			this.users[userData.objectID].position = util.worldToLocalPosition(userData.position, this.gameConfig.userOffset);
 			this.users[userData.objectID].targetPosition = util.worldToLocalPosition(userData.targetPosition, this.gameConfig.userOffset);
@@ -73,10 +74,27 @@ CManager.prototype = {
 			this.users[userData.objectID].direction = userData.direction;
 			this.users[userData.objectID].rotateSpeed = userData.rotateSpeed;
 			// this.users[userData.objectID].targetDirection = userData.targetDirection;
+			// this.users[userData.objectID].clones = userData.clones;
 
 			this.users[userData.objectID].setCenter();
 			this.users[userData.objectID].setTargetDirection();
 			this.users[userData.objectID].setSpeed();
+
+			this.users[userData.objectID].clones = [];
+			for(var i=0; i<Object.keys(userData.clones).length; i++){
+				var cloneInstance = new User(userData.clones[i], this.gameConfig);
+				cloneInstance.position = util.worldToLocalPosition(userData.clones[i].position, this.gameConfig.userOffset);
+				cloneInstance.targetPosition = util.worldToLocalPosition(userData.clones[i].targetPosition, this.gameConfig.userOffset);
+
+				cloneInstance.direction = userData.clones[i].direction;
+				cloneInstance.rotateSpeed = userData.clones[i].rotateSpeed;
+
+				cloneInstance.setCenter();
+				cloneInstance.setTargetDirection();
+				cloneInstance.setSpeed();
+
+				this.users[userData.objectID].clones.push(cloneInstance);
+			}
 		}else{
   		console.log('can`t find user data');
 		}
@@ -91,21 +109,21 @@ CManager.prototype = {
 	//will be merge to updateUser function
 	moveUser : function(userData){
 		if(this.checkUserAtUsers(userData)){
-			console.log(userData);
-			console.log(this.users[userData.objectID]);
-			this.users[userData.objectID].position = util.worldToLocalPosition(userData.position, this.gameConfig.userOffset);
-			this.users[userData.objectID].targetPosition = util.worldToLocalPosition(userData.targetPosition, this.gameConfig.userOffset);
-
-			// this.users[userData.objectID].speed.x = userData.speed.x;
-			// this.users[userData.objectID].speed.y = userData.speed.y;
-
-			this.users[userData.objectID].direction = userData.direction;
-			this.users[userData.objectID].rotateSpeed = userData.rotateSpeed;
-			// this.users[userData.objectID].targetDirection = userData.targetDirection;
-
-			this.users[userData.objectID].setCenter();
-			this.users[userData.objectID].setTargetDirection();
-			this.users[userData.objectID].setSpeed();
+			// console.log(userData);
+			// console.log(this.users[userData.objectID]);
+			// this.users[userData.objectID].position = util.worldToLocalPosition(userData.position, this.gameConfig.userOffset);
+			// this.users[userData.objectID].targetPosition = util.worldToLocalPosition(userData.targetPosition, this.gameConfig.userOffset);
+			//
+			// // this.users[userData.objectID].speed.x = userData.speed.x;
+			// // this.users[userData.objectID].speed.y = userData.speed.y;
+			//
+			// this.users[userData.objectID].direction = userData.direction;
+			// this.users[userData.objectID].rotateSpeed = userData.rotateSpeed;
+			// // this.users[userData.objectID].targetDirection = userData.targetDirection;
+			//
+			// this.users[userData.objectID].setCenter();
+			// this.users[userData.objectID].setTargetDirection();
+			// this.users[userData.objectID].setSpeed();
 
 			if(this.user.objectID == userData.objectID){
 				//offset targetPosition change >> targetPosition == position
@@ -115,6 +133,15 @@ CManager.prototype = {
 			}
 		}else{
   		console.log('can`t find user data');
+		}
+	},
+	moveClone : function(userData){
+		if(this.checkUserAtUsers(userData)){
+			for(var i=0; i<Object.keys(this.users[userData.objectID].clones).length; i++){
+				this.users[userData.objectID].clones[i].changeState(this.gameConfig.OBJECT_STATE_MOVE);
+			}
+		}else{
+			console.log('can`t find user data');
 		}
 	},
 	//execute every frame this client user move

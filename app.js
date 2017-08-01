@@ -79,7 +79,7 @@ io.on('connection', function(socket){
     GM.fireClone(user);
 
     var userData = GM.updateDataSetting(user);
-    
+
     io.sockets.emit('resSkill', userData);
   });
   socket.on('disconnect', function(){
