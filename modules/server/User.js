@@ -1,14 +1,15 @@
 var LivingEntity = require('./LivingEntity.js');
 var SUtil = require('./ServerUtil.js');
 var Clone = require('./Clone.js');
+var serverConfig = require('./serverConfig.json');
 
 function User(id){
   LivingEntity.call(this);
 
   this.clones = [];
+  this.cloneTimeout = [];
 
   this.mass = 100;
-
   this.socketID = id;
 };
 User.prototype = Object.create(LivingEntity.prototype);
@@ -28,15 +29,27 @@ User.prototype.changeMass = function(){
   this.setCenter();
 }
 //clone
-User.prototype.makeClone = function(){
+User.prototype.makeClone = function(cloneID){
   var cloneMaxSpeed = SUtil.calcCloneSpeed(this.maxSpeed);
-  var targetPosition = SUtil.calcCloneTargetPosition(this.direction, cloneMaxSpeed);
+  var targetPosition = SUtil.calcCloneTargetPosition(this.position, this.direction, cloneMaxSpeed);
   var cloneMass = this.mass/2;
   this.changeMass();
   var radius = SUtil.massToRadius(cloneMass);
-  var clone = new Clone(this, cloneMaxSpeed, targetPosition, cloneMass, radius);
+  var clone = new Clone(this, cloneID, cloneMaxSpeed, targetPosition, cloneMass, radius);
   clone.setCenter();
   clone.moveClone();
+  var thisUser = this;
+  // var timeout = setTimeout(function(){
+  //   clone.setMaxSpeed(thisUser.maxSpeed);
+  //   clone.setTargetPosition(thisUser.position);
+  //   clone.setTargetDirection();
+  //   clone.setSpeed();
+  //   clone.changeState(thisUser.gameConfig.OBJECT_STATE_MOVE);
+  // }, serverConfig.cloneChangeableTime * 1000);
+  // this.cloneTimeout.push(timeout);
+  setTimeout(function(){
+
+  }, serverConfig.cloneLifeTime * 1000);
   this.clones.push(clone);
   // console.log(this.clones);
 };

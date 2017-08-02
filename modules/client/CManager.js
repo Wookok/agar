@@ -127,6 +127,7 @@ CManager.prototype = {
 
 			if(this.user.objectID == userData.objectID){
 				//offset targetPosition change >> targetPosition == position
+				console.log(this.users[userData.objectID]);
 				this.users[userData.objectID].changeState(this.gameConfig.OBJECT_STATE_MOVE_OFFSET);
 			}else{
 				this.users[userData.objectID].changeState(userData.currentState);
@@ -138,6 +139,7 @@ CManager.prototype = {
 	moveClone : function(userData){
 		if(this.checkUserAtUsers(userData)){
 			for(var i=0; i<Object.keys(this.users[userData.objectID].clones).length; i++){
+				console.log(this.users[userData.objectID].clones[i].targetPosition);
 				this.users[userData.objectID].clones[i].changeState(this.gameConfig.OBJECT_STATE_MOVE);
 			}
 		}else{
@@ -145,7 +147,7 @@ CManager.prototype = {
 		}
 	},
 	//execute every frame this client user move
-	moveUsersOffset : function(){
+	moveOffset : function(){
 		for(var index in this.users){
 			if(this.checkUserAtUsers(this.users[index])){
 				if(this.users[index] !== this.user){
@@ -157,6 +159,17 @@ CManager.prototype = {
 
 					this.users[index].targetPosition.x -= this.user.speed.x;
 					this.users[index].targetPosition.y -= this.user.speed.y;
+
+					for(var i=0; i<Object.keys(this.users[index].clones).length; i++){
+						this.users[index].clones[i].position.x -= this.user.speed.x;
+						this.users[index].clones[i].position.y -= this.user.speed.y;
+
+						this.users[index].clones[i].center.x -= this.user.speed.x;
+						this.users[index].clones[i].center.y -= this.user.speed.y;
+
+						this.users[index].clones[i].targetPosition.x -= this.user.speed.x;
+						this.users[index].clones[i].targetPosition.y -= this.user.speed.y;
+					}
 				}
 			}else{
 				console.log('can`t find user data');
@@ -196,7 +209,7 @@ CManager.prototype = {
 		for(var index in this.users){
 			if(this.users[index].objectID === userID){
 				this.user = this.users[index];
-				this.user.onMoveOffset = this.moveUsersOffset.bind(this);
+				this.user.onMoveOffset = this.moveOffset.bind(this);
 			}
 		}
 		if(this.user === null){

@@ -1,12 +1,13 @@
-var LivingEntity = require('./LivingEntity.js');
+var User = require('./User.js');
 var gameConfig = require('../public/gameConfig.json');
 var serverConfig = require('./serverConfig.json');
 
-function Clone(base, maxSpeed, targetPosition, mass, radius){
-  LivingEntity.call(this);
+function Clone(base, id, maxSpeed, targetPosition, mass, radius){
+  User.call(this);
   this.startTime = Date.now();
 
-  this.objectID = base.objectID;
+  this.objectID = id;
+  this.userID = base.objectID;
   this.position.x = base.position.x;
   this.position.y = base.position.y;
 
@@ -20,7 +21,7 @@ function Clone(base, maxSpeed, targetPosition, mass, radius){
   this.setMaxSpeed(maxSpeed);
   this.targetPosition = targetPosition;
 };
-Clone.prototype = Object.create(LivingEntity.prototype);
+Clone.prototype = Object.create(User.prototype);
 Clone.prototype.constructor = Clone;
 
 Clone.prototype.moveClone = function(){
@@ -29,6 +30,16 @@ Clone.prototype.moveClone = function(){
 };
 Clone.prototype.checkChangeAble = function(){
   return Date.now() - this.startTime > serverConfig.cloneChangeableTime * 1000;
+};
+Clone.prototype.setCloneEle = function(){
+  this.userTreeEle = {
+    x : this.position.x,
+    y : this.position.y,
+    width : this.size.width,
+    height : this.size.height,
+    id : this.userID,
+    cloneID : this.objectID
+  };
 };
 
 module.exports = Clone;

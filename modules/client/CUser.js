@@ -94,6 +94,16 @@ User.prototype = {
     this.gameConfig.userOffset.x += this.speed.x;
     this.gameConfig.userOffset.y += this.speed.y;
 
+    for(var i=0; i<Object.keys(this.clones).length; i++){
+      this.clones[i].targetPosition.x -= this.clones[i].speed.x;
+      this.clones[i].targetPosition.y -= this.clones[i].speed.y;
+
+      this.clones[i].center.x -= this.clones[i].speed.x;
+      this.clones[i].center.y -= this.clones[i].speed.y;
+
+      this.clones[i].position.x -= this.clones[i].speed.x;
+      this.clones[i].position.y -= this.clones[i].speed.y
+    }
     this.onMoveOffset();
   },
   addPosAndTargetPos : function(addPosX , addPosY){

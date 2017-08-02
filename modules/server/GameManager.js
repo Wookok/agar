@@ -18,7 +18,9 @@ function GameManager(){
     height : gameConfig.CANVAS_MAX_SIZE.height,
     maxElements : 5
   });
+
   this.userEles = [];
+  this.userCloneEles = [];
   this.colliderEles = [];
   this.affectedEles = [];
 
@@ -88,7 +90,9 @@ GameManager.prototype.updateGame = function(){
 };
 
 GameManager.prototype.fireClone = function(user){
-  user.makeClone();
+  var cloneID = SUtil.generateRandomUniqueID('C', user.clones);
+  console.log(cloneID);
+  user.makeClone(cloneID);
 };
 //setting User for moving and move user;
 GameManager.prototype.setUserTargetAndMove = function(user, targetPosition){
@@ -140,11 +144,11 @@ GameManager.prototype.stopUser = function(user){
   user.stop();
 };
 
-GameManager.prototype.deleteFood = function(foodID, userID, userRadius){
+GameManager.prototype.deleteFood = function(foodID, affectedID, userRadius){
   for(var i=0; i<Object.keys(this.foods).length; i++){
     if(this.foods[i].objectID === foodID){
       this.foods.splice(i, 1);
-      this.onDeleteFood(foodID, userID, userRadius);
+      this.onDeleteFood(foodID, affectedID, userRadius);
       return;
     }
   }
@@ -217,7 +221,6 @@ GameManager.prototype.updateDataSetting = function(user){
 
         size : user.clones[i].size
       });
-    console.log(user.clones[i].position);
   }
   var updateUser = {
     objectID : user.objectID,
@@ -273,23 +276,39 @@ function updateIntervalHandler(){
       }
     }
   }
+  for(var i=0; i<this.userCloneEles.length; i++){
+    var tempCollider = this.userCloneEles[i];
+    var collisionObjs = util.checkCircleCollision(this.staticTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
+    if(collisionObjs.length > 0){
+      for(var j=0; j<collisionObjs.length; j++){
+        this.affectedEles.push({'cloneID' : tempCollider.cloneID,'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
+      }
+    }
+  }
   //clear tree and treeArray
   for(var i=0; i<this.userEles.length; i++){
     this.userTree.remove(this.userEles[i]);
+  }
+  for(var i=0; i<this.userCloneEles.length; i++){
+    this.userTree.remove(this.userCloneEles[i]);
   }
   for(var i=0; i<this.staticEles.length; i++){
     this.staticTree.remove(this.staticEles[i]);
   }
   this.userEles = [];
+  this.userCloneEles = [];
   this.staticEles = [];
   // this.colliderEles = [];
 
   //updateUserArray
   for(var index in this.users){
     this.users[index].setUserEle();
+    for(var i=0; i<this.users[index].clones.length; i++){
+      this.users[index].clones[i].setCloneEle();
+      this.userCloneEles.push(this.users[index].clones[i].userTreeEle);
+    }
     this.userEles.push(this.users[index].userTreeEle);
   }
-
   //updateFoodsArray
   var addFoodsCount = this.foodsCount - Object.keys(this.foods).length;
   if(addFoodsCount > 0){
@@ -301,15 +320,29 @@ function updateIntervalHandler(){
 
   //put users data to tree
   this.userTree.pushAll(this.userEles);
+  this.userTree.pushAll(this.userCloneEles);
   this.staticTree.pushAll(this.staticEles);
-
 };
 function affectIntervalHandler(){
   var index = this.affectedEles.length
   while(index--){
-    var userRadius = this.users[this.affectedEles[index].userID].addMass(this.affectedEles[index].foodMass);
-    //userMass will be used for inform to client
-    this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].userID, userRadius);
+    if(this.affectedEles[index].cloneID){
+      for(var i=0; i<Object.keys(this.users[this.affectedEles[index].userID].clones).length; i++){
+        if(this.users[this.affectedEles[index].userID].clones[i].objectID === this.affectedEles[index].cloneID){
+          var cloneIndex = i;
+        }
+      }
+      if(cloneIndex !== -1){
+        var cloneRadius = this.users[this.affectedEles[index].userID].clones[i].addMass(this.affectedEles[index].foodMass);
+        this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].cloneID, cloneRadius);
+      }else{
+        console.log('cant find clone Index');
+      }
+    }else{
+      var userRadius = this.users[this.affectedEles[index].userID].addMass(this.affectedEles[index].foodMass);
+      //userMass will be used for inform to client
+      this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].userID, userRadius);
+    }
     this.affectedEles.splice(index, 1);
   }
 };

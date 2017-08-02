@@ -3,14 +3,15 @@ var gameConfig = require('../public/gameConfig');
 var serverConfig = require('./serverConfig.json');
 
 exports.calcCloneSpeed = function(maxSpeed){
-  return maxSpeed * 2;
+  return maxSpeed * serverConfig.cloneSpeedRate;
 };
-exports.calcCloneTargetPosition = function(direction, maxSpeed){
-  var unitSpeedX = Math.cos(direction) * maxSpeed;
-  var unitSpeedY = Math.sin(direction) * maxSpeed;
+exports.calcCloneTargetPosition = function(position, direction, maxSpeed){
+  var unitSpeedX = Math.cos(direction * Math.PI/180) * maxSpeed;
+  var unitSpeedY = Math.sin(direction * Math.PI/180) * maxSpeed;
+  console.log(unitSpeedX + ':' + unitSpeedY);
   return {
-    x : unitSpeedX * serverConfig.cloneLifeTime * gameConfig.INTERVAL,
-    y : unitSpeedY * serverConfig.cloneLifeTime * gameConfig.INTERVAL
+    x : position.x + unitSpeedX * serverConfig.cloneChangeableTime * gameConfig.INTERVAL,
+    y : position.y + unitSpeedY * serverConfig.cloneChangeableTime * gameConfig.INTERVAL
   };
 };
 exports.massToRadius = function(mass){

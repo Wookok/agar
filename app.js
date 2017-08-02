@@ -27,22 +27,22 @@ var INTERVAL_TIMER = 1000/gameConfig.INTERVAL;
 
 var io = socketio.listen(server);
 
+GM.onCreateFoods = function(foods){
+  var foodsDatas = [];
+  for(var i=0; i<Object.keys(foods).length; i++){
+    foodsDatas.push(GM.updateFoodDataSetting(foods[i]));
+  }
+  io.sockets.emit('createFoods', foodsDatas);
+}
+GM.onDeleteFood = function(foodID, affctedID, affectedRadius){
+  io.sockets.emit('deleteFoodAndAddUserMass', foodID, affctedID, affectedRadius);
+};
+
 io.on('connection', function(socket){
   console.log('user connect : ' + socket.id);
 
   var user = new User(socket.id);
   var updateUserInterval = false;
-
-  GM.onCreateFoods = function(foods){
-    var foodsDatas = [];
-    for(var i=0; i<Object.keys(foods).length; i++){
-      foodsDatas.push(GM.updateFoodDataSetting(foods[i]));
-    }
-    io.sockets.emit('createFoods', foodsDatas);
-  }
-  GM.onDeleteFood = function(foodID, userID, userRadius){
-    io.sockets.emit('deleteFoodAndAddUserMass', foodID, userID, userRadius);
-  };
 
   socket.on('reqStartGame', function(){
 
@@ -87,7 +87,7 @@ io.on('connection', function(socket){
       GM.stopUser(user);
       GM.kickUser(user);
       user = null;
-      io.sockets.emit('userLeave', userData.objectID);
+      io.sockets.emit('userLeave', user.objectID);
     }
     if(updateUserInterval){
       clearInterval(updateUserInterval);
