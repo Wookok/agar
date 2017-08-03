@@ -333,7 +333,7 @@ function affectIntervalHandler(){
         }
       }
       if(cloneIndex !== -1){
-        var cloneRadius = this.users[this.affectedEles[index].userID].clones[i].addMass(this.affectedEles[index].foodMass);
+        var cloneRadius = this.users[this.affectedEles[index].userID].clones[cloneIndex].addMass(this.affectedEles[index].foodMass);
         this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].cloneID, cloneRadius);
       }else{
         console.log('cant find clone Index');

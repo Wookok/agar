@@ -1,9 +1,11 @@
-var User = require('./User.js');
+var util = require('../public/util.js');
 var gameConfig = require('../public/gameConfig.json');
+var SUtil = require('./ServerUtil.js');
 var serverConfig = require('./serverConfig.json');
+var LivingEntity = require('./LivingEntity.js');
 
 function Clone(base, id, maxSpeed, targetPosition, mass, radius){
-  User.call(this);
+  LivingEntity.call(this);
   this.startTime = Date.now();
 
   this.objectID = id;
@@ -20,10 +22,18 @@ function Clone(base, id, maxSpeed, targetPosition, mass, radius){
 
   this.setMaxSpeed(maxSpeed);
   this.targetPosition = targetPosition;
+
+  this.onMoveFindUserAndClones = new Function();
 };
-Clone.prototype = Object.create(User.prototype);
+Clone.prototype = Object.create(LivingEntity.prototype);
 Clone.prototype.constructor = Clone;
 
+Clone.prototype.addMass = function(mass){
+  this.mass += mass;
+  var radius = SUtil.massToRadius(this.mass);
+  this.setSize(radius * 2, radius * 2);
+  this.setCenter();
+}
 Clone.prototype.moveClone = function(){
   this.setSpeed();
   this.changeState(gameConfig.OBJECT_STATE_MOVE);
@@ -41,7 +51,30 @@ Clone.prototype.setCloneEle = function(){
     cloneID : this.objectID
   };
 };
+Clone.prototype.move = function(){
+  var addPos = {x : 0, y : 0};
+  //find user and other clones
+  var others = this.onMoveFindUserAndClones();
+  //check distance with others
+  var collisionObjs = [];
+  for(var i=0; i<others.length; i++){
+    var vecX = this.center.x - others[i].center.x;
+    var vecY = this.center.y - others[i].center.y;
 
+    var dist = Math.sqrt(Math.pow(vecX, 2) + Math.pow(vecY, 2));
+    if(dist < Math.abs(this.size.width/2 + others[i].size.width/2)){
+      var distDiff = this.size.width/2 + others[i].size.width/2 - dist;
+      var ratioXYSqure = Math.pow(vecY/vecX, 2);
+      var distFactorX = distDiff * Math.sqrt(1/(1 + ratioXYSqure));
+      var distFactorY = distDiff * Math.sqrt((ratioXYSqure)/(1 + ratioXYSqure));
+
+      addPos.x += (vecX > 0 ? 1 : -1) * distFactorX;
+      addPos.y += (vecY > 0 ? 1 : -1) * distFactorY;
+    }
+  }
+  //if collision calculate distance
+  util.move.call(this, addPos);
+};
 module.exports = Clone;
 // Clone.prototype.setTargetPositionAndInitMaxSpeed = function(targetPosition, maxSpeed){
 //   if(Date.now() - this.startTime > serverConfig.cloneTargetChangeableTime * 1000){

@@ -27,7 +27,7 @@ User.prototype.changeMass = function(){
   var radius = SUtil.massToRadius(this.mass);
   this.setSize(radius * 2, radius * 2);
   this.setCenter();
-}
+};
 //clone
 User.prototype.makeClone = function(cloneID){
   var cloneMaxSpeed = SUtil.calcCloneSpeed(this.maxSpeed);
@@ -36,9 +36,21 @@ User.prototype.makeClone = function(cloneID){
   this.changeMass();
   var radius = SUtil.massToRadius(cloneMass);
   var clone = new Clone(this, cloneID, cloneMaxSpeed, targetPosition, cloneMass, radius);
+
+  var thisClones = this.clones;
+  var thisUser = this;
+  clone.onMoveFindUserAndClones = function(){
+    var others = [];
+    others.push(thisUser);
+    for(var i=0; i<thisClones.length; i++){
+      if(thisClones[i].objectID !== clone.objectID){
+        others.push(thisClones[i]);
+      }
+    }
+    return others;
+  };
   clone.setCenter();
   clone.moveClone();
-  var thisUser = this;
   // var timeout = setTimeout(function(){
   //   clone.setMaxSpeed(thisUser.maxSpeed);
   //   clone.setTargetPosition(thisUser.position);

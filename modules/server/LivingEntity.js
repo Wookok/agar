@@ -1,6 +1,5 @@
 var GameObject = require('./GameObject.js');
 var util = require('../public/util.js');
-
 var gameConfig = require('../public/gameConfig.json');
 
 var INTERVAL_TIMER = Math.floor(1000/gameConfig.INTERVAL);

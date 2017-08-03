@@ -1,5 +1,175 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var LivingEntity = require('./CLivingEntity.js');
+var util = require('../public/util.js');
+
+var Clone = function(cloneData, gameConfig, userID){
+  LivingEntity.call(this, cloneData, gameConfig);
+
+  this.objectID = cloneData.objectID;
+  this.userID = userID;
+
+  this.onMoveFindUserAndClones = new Function();
+};
+Clone.prototype = Object.create(LivingEntity.prototype);
+Clone.prototype.constructor = Clone;
+
+Clone.prototype.moveClone = function(){
+  this.setSpeed();
+  this.changeState(this.gameConfig.OBJECT_STATE_MOVE);
+};
+Clone.prototype.move = function(){
+  var addPos = {x : 0, y : 0};
+  //find user and other clones
+  var others = this.onMoveFindUserAndClones();
+  //check distance with others
+  var collisionObjs = [];
+  for(var i=0; i<others.length; i++){
+    var vecX = this.center.x - others[i].center.x;
+    var vecY = this.center.y - others[i].center.y;
+
+    var dist = Math.sqrt(Math.pow(vecX, 2) + Math.pow(vecY, 2));
+    if(dist < Math.abs(this.size.width/2 + others[i].size.width/2)){
+      var distDiff = this.size.width/2 + others[i].size.width/2 - dist;
+      var ratioXYSqure = Math.pow(vecY/vecX, 2);
+      var distFactorX = distDiff * Math.sqrt(1/(1 + ratioXYSqure));
+      var distFactorY = distDiff * Math.sqrt((ratioXYSqure)/(1 + ratioXYSqure));
+
+      addPos.x += (vecX > 0 ? 1 : -1) * distFactorX;
+      addPos.y += (vecY > 0 ? 1 : -1) * distFactorY;
+    }
+  }
+  //if collision calculate distance
+  util.move.call(this, addPos);
+};
+module.exports = Clone;
+
+},{"../public/util.js":7,"./CLivingEntity.js":2}],2:[function(require,module,exports){
+var util = require('../public/util.js');
+
+var LivingEntity = function(entityData, gameConfig){
+  this.gameConfig = gameConfig;
+
+  this.currentState = null;
+  this.size = entityData.size;
+
+  this.position = util.worldToLocalPosition(entityData.position, this.gameConfig.userOffset);
+  this.targetPosition = util.worldToLocalPosition(entityData.targetPosition, this.gameConfig.userOffset);
+  this.direction = entityData.direction;
+  this.rotateSpeed = entityData.rotateSpeed;
+
+  this.maxSpeed = entityData.maxSpeed;
+
+  this.center = {x : 0, y : 0};
+  this.speed = {x : 0, y : 0};
+  this.targetDirection = 0;
+
+  this.setCenter();
+  this.setSpeed();
+  this.setTargetDirection();
+
+  this.updateInterval = false;
+  this.updateFunction = null;
+
+  this.onMoveOffset = null;
+};
+LivingEntity.prototype = {
+  changeState : function(newState){
+
+    this.currentState = newState;
+
+    this.stop();
+    switch (this.currentState) {
+      case this.gameConfig.OBJECT_STATE_IDLE:
+        this.updateFunction = null;
+        break;
+      case this.gameConfig.OBJECT_STATE_MOVE:
+        this.updateFunction = this.rotate.bind(this);
+        break;
+      case this.gameConfig.OBJECT_STATE_MOVE_OFFSET:
+        this.updateFunction = this.rotate.bind(this);
+        break;
+    }
+    this.update();
+  },
+  update : function(){
+    var INTERVAL_TIMER = Math.floor(1000/this.gameConfig.INTERVAL);
+    this.updateInterval = setInterval(this.updateFunction, INTERVAL_TIMER);
+  },
+  setCenter : function(){
+    this.center.x = this.position.x + this.size.width/2,
+    this.center.y = this.position.y + this.size.height/2
+  },
+  setSize : function(radius){
+    this.size.width = radius * 2;
+    this.size.height = radius * 2;
+    this.setCenter();
+  },
+  rotate : function(){
+    util.rotate.call(this);
+  },
+  move : function(){
+    util.move.call(this);
+  },
+  setTargetDirection : function(){
+    util.setTargetDirection.call(this);
+  },
+  setSpeed : function(){
+    util.setSpeed.call(this);
+  },
+  moveOffset : function(){
+    var distX = this.targetPosition.x - this.center.x;
+    var distY = this.targetPosition.y - this.center.y;
+
+    if(distX == 0 && distY == 0){
+      this.stop();
+      this.changeState(this.gameConfig.OBJECT_STATE_IDLE);
+    }
+    if(Math.abs(distX) < Math.abs(this.speed.x)){
+      this.speed.x = distX;
+    }
+    if(Math.abs(distY) < Math.abs(this.speed.y)){
+      this.speed.y = distY;
+    }
+    this.targetPosition.x -= this.speed.x;
+    this.targetPosition.y -= this.speed.y;
+
+    this.gameConfig.userOffset.x += this.speed.x;
+    this.gameConfig.userOffset.y += this.speed.y;
+
+    for(var i=0; i<Object.keys(this.clones).length; i++){
+      this.clones[i].targetPosition.x -= this.clones[i].speed.x;
+      this.clones[i].targetPosition.y -= this.clones[i].speed.y;
+
+      this.clones[i].center.x -= this.clones[i].speed.x;
+      this.clones[i].center.y -= this.clones[i].speed.y;
+
+      this.clones[i].position.x -= this.clones[i].speed.x;
+      this.clones[i].position.y -= this.clones[i].speed.y
+    }
+    this.onMoveOffset();
+  },
+  addPosAndTargetPos : function(addPosX , addPosY){
+    this.position.x += addPosX;
+    this.position.y += addPosY;
+
+    this.targetPosition.x += addPosX;
+    this.targetPosition.y += addPosY;
+
+    this.setCenter();
+  },
+  stop : function(){
+    if(this.updateInterval){
+      clearInterval(this.updateInterval);
+      this.updateInterval = false;
+    }
+  }
+};
+
+module.exports = LivingEntity;
+
+},{"../public/util.js":7}],3:[function(require,module,exports){
 var User = require('./CUser.js');
+var Clone = require('./CClone.js');
 var util = require('../public/util.js');
 
 var CManager = function(gameConfig){
@@ -65,7 +235,6 @@ CManager.prototype = {
 
 	},
 	updateUserData : function(userData){
-		console.log(userData);
 		if(this.checkUserAtUsers(userData)){
 			this.users[userData.objectID].position = util.worldToLocalPosition(userData.position, this.gameConfig.userOffset);
 			this.users[userData.objectID].targetPosition = util.worldToLocalPosition(userData.targetPosition, this.gameConfig.userOffset);
@@ -74,6 +243,7 @@ CManager.prototype = {
 
 			this.users[userData.objectID].direction = userData.direction;
 			this.users[userData.objectID].rotateSpeed = userData.rotateSpeed;
+			this.users[userData.objectID].size = userData.size;
 			// this.users[userData.objectID].targetDirection = userData.targetDirection;
 			// this.users[userData.objectID].clones = userData.clones;
 
@@ -81,20 +251,43 @@ CManager.prototype = {
 			this.users[userData.objectID].setTargetDirection();
 			this.users[userData.objectID].setSpeed();
 
-			this.users[userData.objectID].clones = [];
 			for(var i=0; i<Object.keys(userData.clones).length; i++){
-				var cloneInstance = new User(userData.clones[i], this.gameConfig);
-				cloneInstance.position = util.worldToLocalPosition(userData.clones[i].position, this.gameConfig.userOffset);
-				cloneInstance.targetPosition = util.worldToLocalPosition(userData.clones[i].targetPosition, this.gameConfig.userOffset);
+				//check clone is exist
+				//if exist update position
+				//else make clone
+				if(util.isExistsClone(this.users[userData.objectID].clones, userData.clones[i])){
+					for(var j=0; j<this.users[userData.objectID].clones.length; j++){
+						if(this.users[userData.objectID].clones[j].objectID === userData.clones[i].objectID){
+							this.users[userData.objectID].clones[j].position = util.worldToLocalPosition(userData.clones[i].position, this.gameConfig.userOffset);
+							this.users[userData.objectID].clones[j].targetPosition = util.worldToLocalPosition(userData.clones[i].targetPosition, this.gameConfig.userOffset);
+							this.users[userData.objectID].clones[j].size = userData.clones[i].size;
 
-				cloneInstance.direction = userData.clones[i].direction;
-				cloneInstance.rotateSpeed = userData.clones[i].rotateSpeed;
+							this.users[userData.objectID].clones[j].direction = userData.clones[i].direction;
+							this.users[userData.objectID].clones[j].rotateSpeed = userData.clones[i].rotateSpeed;
+							this.users[userData.objectID].clones[j].maxSpeed = userData.clones[i].maxSpeed;
 
-				cloneInstance.setCenter();
-				cloneInstance.setTargetDirection();
-				cloneInstance.setSpeed();
+							this.users[userData.objectID].clones[j].setCenter();
+							this.users[userData.objectID].clones[j].setTargetDirection();
+							this.users[userData.objectID].clones[j].setSpeed();
+						}
+					}
+				}else{
+					console.log('make Clone');
+					this.users[userData.objectID].makeClone(userData.clones[i])
+				}
 
-				this.users[userData.objectID].clones.push(cloneInstance);
+				// var cloneInstance = new User(userData.clones[i], this.gameConfig);
+				// cloneInstance.position = util.worldToLocalPosition(userData.clones[i].position, this.gameConfig.userOffset);
+				// cloneInstance.targetPosition = util.worldToLocalPosition(userData.clones[i].targetPosition, this.gameConfig.userOffset);
+				//
+				// cloneInstance.direction = userData.clones[i].direction;
+				// cloneInstance.rotateSpeed = userData.clones[i].rotateSpeed;
+				//
+				// cloneInstance.setCenter();
+				// cloneInstance.setTargetDirection();
+				// cloneInstance.setSpeed();
+				//
+				// this.users[userData.objectID].clones.push(cloneInstance);
 			}
 		}else{
   		console.log('can`t find user data');
@@ -244,135 +437,44 @@ CManager.prototype = {
 
 module.exports = CManager;
 
-},{"../public/util.js":5,"./CUser.js":2}],2:[function(require,module,exports){
+},{"../public/util.js":7,"./CClone.js":1,"./CUser.js":4}],4:[function(require,module,exports){
 var util = require('../public/util.js');
+var LivingEntity = require('./CLivingEntity.js');
+var Clone = require('./CClone.js');
 
 var User = function(userData, gameConfig){
-  this.gameConfig = gameConfig;
-
   this.objectID = userData.objectID;
-
-  this.currentState = null;
-  this.size = userData.size;
-
-  this.position = util.worldToLocalPosition(userData.position, this.gameConfig.userOffset);
-  this.targetPosition = util.worldToLocalPosition(userData.targetPosition, this.gameConfig.userOffset);
-  this.direction = userData.direction;
-  this.rotateSpeed = userData.rotateSpeed;
-
-  this.maxSpeed = userData.maxSpeed;
-
-  this.center = {x : 0, y : 0};
-  this.speed = {x : 0, y : 0};
-  this.targetDirection = 0;
+  LivingEntity.call(this, userData, gameConfig);
 
   this.clones = [];
-
-  this.setCenter();
-  this.setSpeed();
-  this.setTargetDirection();
-
-  this.updateInterval = false;
-  this.updateFunction = null;
-
-  this.onMoveOffset = null;
 };
-User.prototype = {
-  changeState : function(newState){
+User.prototype = Object.create(LivingEntity.prototype);
+User.prototype.constructor = User;
 
-    this.currentState = newState;
+User.prototype.makeClone = function(cloneData){
+  var thisUser = this;
+  var thisClones = this.clones;
 
-    this.stop();
-    switch (this.currentState) {
-      case this.gameConfig.OBJECT_STATE_IDLE:
-        this.updateFunction = null;
-        break;
-      case this.gameConfig.OBJECT_STATE_MOVE:
-        this.updateFunction = this.rotate.bind(this);
-        break;
-      case this.gameConfig.OBJECT_STATE_MOVE_OFFSET:
-        this.updateFunction = this.rotate.bind(this);
-        break;
+  var clone = new Clone(cloneData, this.gameConfig, this.objectID);
+  clone.onMoveFindUserAndClones = function(){
+    var others = [];
+    others.push(thisUser);
+    for(var i=0; i<thisClones.length; i++){
+      if(thisClones[i].objectID !== clone.objectID){
+        others.push(thisClones[i]);
+      }
     }
-    this.update();
-  },
-  update : function(){
-    var INTERVAL_TIMER = Math.floor(1000/this.gameConfig.INTERVAL);
-    this.updateInterval = setInterval(this.updateFunction, INTERVAL_TIMER);
-  },
-  setCenter : function(){
-    this.center.x = this.position.x + this.size.width/2,
-    this.center.y = this.position.y + this.size.height/2
-  },
-  setSize : function(radius){
-    this.size.width = radius * 2;
-    this.size.height = radius * 2;
-    this.setCenter();
-  },
-  rotate : function(){
-    util.rotate.call(this);
-  },
-  move : function(){
-    util.move.call(this);
-  },
-  setTargetDirection : function(){
-    util.setTargetDirection.call(this);
-  },
-  setSpeed : function(){
-    util.setSpeed.call(this);
-  },
-  moveOffset : function(){
-    var distX = this.targetPosition.x - this.center.x;
-    var distY = this.targetPosition.y - this.center.y;
+    return others;
+  };
+  clone.setCenter();
+  clone.moveClone();
 
-    if(distX == 0 && distY == 0){
-      this.stop();
-      this.changeState(this.gameConfig.OBJECT_STATE_IDLE);
-    }
-    if(Math.abs(distX) < Math.abs(this.speed.x)){
-      this.speed.x = distX;
-    }
-    if(Math.abs(distY) < Math.abs(this.speed.y)){
-      this.speed.y = distY;
-    }
-    this.targetPosition.x -= this.speed.x;
-    this.targetPosition.y -= this.speed.y;
-
-    this.gameConfig.userOffset.x += this.speed.x;
-    this.gameConfig.userOffset.y += this.speed.y;
-
-    for(var i=0; i<Object.keys(this.clones).length; i++){
-      this.clones[i].targetPosition.x -= this.clones[i].speed.x;
-      this.clones[i].targetPosition.y -= this.clones[i].speed.y;
-
-      this.clones[i].center.x -= this.clones[i].speed.x;
-      this.clones[i].center.y -= this.clones[i].speed.y;
-
-      this.clones[i].position.x -= this.clones[i].speed.x;
-      this.clones[i].position.y -= this.clones[i].speed.y
-    }
-    this.onMoveOffset();
-  },
-  addPosAndTargetPos : function(addPosX , addPosY){
-    this.position.x += addPosX;
-    this.position.y += addPosY;
-
-    this.targetPosition.x += addPosX;
-    this.targetPosition.y += addPosY;
-
-    this.setCenter();
-  },
-  stop : function(){
-    if(this.updateInterval){
-      clearInterval(this.updateInterval);
-      this.updateInterval = false;
-    }
-  }
-};
+  this.clones.push(clone);
+}
 
 module.exports = User;
 
-},{"../public/util.js":5}],3:[function(require,module,exports){
+},{"../public/util.js":7,"./CClone.js":1,"./CLivingEntity.js":2}],5:[function(require,module,exports){
 module.exports={
   "INTERVAL" : 30,
 
@@ -401,7 +503,7 @@ module.exports={
   "FOOD_RANGE_WITH_OTHERS" : 10
 }
 
-},{}],4:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 module.exports={
   "USER_BODY_SRC" : "../images/CharBase.svg",
   "USER_BODY_SIZE" : 64,
@@ -412,7 +514,7 @@ module.exports={
   "GRID_IMG_SIZE" : 58
 }
 
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var gameConfig = require('./gameConfig.json');
 
 //must use with bind or call method
@@ -477,7 +579,7 @@ exports.rotate = function(){
 };
 
 //must use with bind or call method
-exports.move = function(){
+exports.move = function(addPos){
   //calculate dist with target
   var distX = this.targetPosition.x - this.center.x;
   var distY = this.targetPosition.y - this.center.y;
@@ -497,6 +599,14 @@ exports.move = function(){
 
   this.center.x += this.speed.x;
   this.center.y += this.speed.y;
+
+  if(addPos){
+    this.position.x += addPos.x;
+    this.position.y += addPos.y;
+
+    this.center.x += addPos.x;
+    this.center.y += addPos.y;
+  }
 };
 
 //must use with bind or call method
@@ -602,8 +712,16 @@ exports.calculateOffset = function(user, canvasSize){
   };
   return newOffset;
 };
+exports.isExistsClone = function(userClones, updateClone){
+  for(var i=0; i<userClones.length; i++){
+    if(userClones[i].objectID === updateClone.objectID){
+      return true;
+    }
+  }
+  return false;
+}
 
-},{"./gameConfig.json":3}],6:[function(require,module,exports){
+},{"./gameConfig.json":5}],8:[function(require,module,exports){
 // inner Modules
 var util = require('../../modules/public/util.js');
 var User = require('../../modules/client/CUser.js');
@@ -732,9 +850,7 @@ function setBaseSetting(){
   // resource 관련
   resource = require('../../modules/public/resource.json');
 
-  userImage = new Image();
   grid = new Image();
-  userImage.src = resource.USER_BODY_SRC;
   grid.src = resource.GRID_SRC;
 };
 
@@ -847,6 +963,7 @@ function setupSocket(){
   });
   socket.on('resSkill', function(userData){
     Manager.updateUserData(userData);
+    console.log(userData.clones);
     Manager.moveClone(userData);
   });
 };
@@ -951,4 +1068,4 @@ function revisionUserPos(userData){
 };
 update();
 
-},{"../../modules/client/CManager.js":1,"../../modules/client/CUser.js":2,"../../modules/public/gameConfig.json":3,"../../modules/public/resource.json":4,"../../modules/public/util.js":5}]},{},[6]);
+},{"../../modules/client/CManager.js":3,"../../modules/client/CUser.js":4,"../../modules/public/gameConfig.json":5,"../../modules/public/resource.json":6,"../../modules/public/util.js":7}]},{},[8]);

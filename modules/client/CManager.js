@@ -1,4 +1,5 @@
 var User = require('./CUser.js');
+var Clone = require('./CClone.js');
 var util = require('../public/util.js');
 
 var CManager = function(gameConfig){
@@ -64,7 +65,6 @@ CManager.prototype = {
 
 	},
 	updateUserData : function(userData){
-		console.log(userData);
 		if(this.checkUserAtUsers(userData)){
 			this.users[userData.objectID].position = util.worldToLocalPosition(userData.position, this.gameConfig.userOffset);
 			this.users[userData.objectID].targetPosition = util.worldToLocalPosition(userData.targetPosition, this.gameConfig.userOffset);
@@ -73,6 +73,7 @@ CManager.prototype = {
 
 			this.users[userData.objectID].direction = userData.direction;
 			this.users[userData.objectID].rotateSpeed = userData.rotateSpeed;
+			this.users[userData.objectID].size = userData.size;
 			// this.users[userData.objectID].targetDirection = userData.targetDirection;
 			// this.users[userData.objectID].clones = userData.clones;
 
@@ -80,20 +81,43 @@ CManager.prototype = {
 			this.users[userData.objectID].setTargetDirection();
 			this.users[userData.objectID].setSpeed();
 
-			this.users[userData.objectID].clones = [];
 			for(var i=0; i<Object.keys(userData.clones).length; i++){
-				var cloneInstance = new User(userData.clones[i], this.gameConfig);
-				cloneInstance.position = util.worldToLocalPosition(userData.clones[i].position, this.gameConfig.userOffset);
-				cloneInstance.targetPosition = util.worldToLocalPosition(userData.clones[i].targetPosition, this.gameConfig.userOffset);
+				//check clone is exist
+				//if exist update position
+				//else make clone
+				if(util.isExistsClone(this.users[userData.objectID].clones, userData.clones[i])){
+					for(var j=0; j<this.users[userData.objectID].clones.length; j++){
+						if(this.users[userData.objectID].clones[j].objectID === userData.clones[i].objectID){
+							this.users[userData.objectID].clones[j].position = util.worldToLocalPosition(userData.clones[i].position, this.gameConfig.userOffset);
+							this.users[userData.objectID].clones[j].targetPosition = util.worldToLocalPosition(userData.clones[i].targetPosition, this.gameConfig.userOffset);
+							this.users[userData.objectID].clones[j].size = userData.clones[i].size;
 
-				cloneInstance.direction = userData.clones[i].direction;
-				cloneInstance.rotateSpeed = userData.clones[i].rotateSpeed;
+							this.users[userData.objectID].clones[j].direction = userData.clones[i].direction;
+							this.users[userData.objectID].clones[j].rotateSpeed = userData.clones[i].rotateSpeed;
+							this.users[userData.objectID].clones[j].maxSpeed = userData.clones[i].maxSpeed;
 
-				cloneInstance.setCenter();
-				cloneInstance.setTargetDirection();
-				cloneInstance.setSpeed();
+							this.users[userData.objectID].clones[j].setCenter();
+							this.users[userData.objectID].clones[j].setTargetDirection();
+							this.users[userData.objectID].clones[j].setSpeed();
+						}
+					}
+				}else{
+					console.log('make Clone');
+					this.users[userData.objectID].makeClone(userData.clones[i])
+				}
 
-				this.users[userData.objectID].clones.push(cloneInstance);
+				// var cloneInstance = new User(userData.clones[i], this.gameConfig);
+				// cloneInstance.position = util.worldToLocalPosition(userData.clones[i].position, this.gameConfig.userOffset);
+				// cloneInstance.targetPosition = util.worldToLocalPosition(userData.clones[i].targetPosition, this.gameConfig.userOffset);
+				//
+				// cloneInstance.direction = userData.clones[i].direction;
+				// cloneInstance.rotateSpeed = userData.clones[i].rotateSpeed;
+				//
+				// cloneInstance.setCenter();
+				// cloneInstance.setTargetDirection();
+				// cloneInstance.setSpeed();
+				//
+				// this.users[userData.objectID].clones.push(cloneInstance);
 			}
 		}else{
   		console.log('can`t find user data');

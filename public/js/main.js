@@ -126,9 +126,7 @@ function setBaseSetting(){
   // resource 관련
   resource = require('../../modules/public/resource.json');
 
-  userImage = new Image();
   grid = new Image();
-  userImage.src = resource.USER_BODY_SRC;
   grid.src = resource.GRID_SRC;
 };
 
@@ -241,6 +239,7 @@ function setupSocket(){
   });
   socket.on('resSkill', function(userData){
     Manager.updateUserData(userData);
+    console.log(userData.clones);
     Manager.moveClone(userData);
   });
 };

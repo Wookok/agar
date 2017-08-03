@@ -62,7 +62,7 @@ exports.rotate = function(){
 };
 
 //must use with bind or call method
-exports.move = function(){
+exports.move = function(addPos){
   //calculate dist with target
   var distX = this.targetPosition.x - this.center.x;
   var distY = this.targetPosition.y - this.center.y;
@@ -82,6 +82,14 @@ exports.move = function(){
 
   this.center.x += this.speed.x;
   this.center.y += this.speed.y;
+
+  if(addPos){
+    this.position.x += addPos.x;
+    this.position.y += addPos.y;
+
+    this.center.x += addPos.x;
+    this.center.y += addPos.y;
+  }
 };
 
 //must use with bind or call method
@@ -187,3 +195,11 @@ exports.calculateOffset = function(user, canvasSize){
   };
   return newOffset;
 };
+exports.isExistsClone = function(userClones, updateClone){
+  for(var i=0; i<userClones.length; i++){
+    if(userClones[i].objectID === updateClone.objectID){
+      return true;
+    }
+  }
+  return false;
+}
