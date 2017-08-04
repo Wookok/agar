@@ -34,6 +34,7 @@ function GameManager(){
   this.foodsCount = gameConfig.FOOD_MIN_COUNT;
   this.onCreateFoods = new Function();
   this.onDeleteFood = new Function();
+  this.onUserFusion = new Function();
 };
 
 GameManager.prototype.start = function(){
@@ -91,7 +92,6 @@ GameManager.prototype.updateGame = function(){
 
 GameManager.prototype.fireClone = function(user){
   var cloneID = SUtil.generateRandomUniqueID('C', user.clones);
-  console.log(cloneID);
   user.makeClone(cloneID);
 };
 //setting User for moving and move user;
@@ -139,6 +139,8 @@ GameManager.prototype.initializeUser = function(user){
 
   user.setRotateSpeed(60);
   user.setMaxSpeed(10);
+
+  user.onFusion = this.onUserFusion;
 };
 GameManager.prototype.stopUser = function(user){
   user.stop();
@@ -239,7 +241,6 @@ GameManager.prototype.updateDataSetting = function(user){
     size : user.size,
     clones : clonesData
   };
-  console.log(updateUser.position);
   return updateUser;
 };
 GameManager.prototype.updateFoodsDataSettings = function(){

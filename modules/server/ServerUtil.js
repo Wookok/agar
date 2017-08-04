@@ -8,7 +8,6 @@ exports.calcCloneSpeed = function(maxSpeed){
 exports.calcCloneTargetPosition = function(position, direction, maxSpeed){
   var unitSpeedX = Math.cos(direction * Math.PI/180) * maxSpeed;
   var unitSpeedY = Math.sin(direction * Math.PI/180) * maxSpeed;
-  console.log(unitSpeedX + ':' + unitSpeedY);
   return {
     x : position.x + unitSpeedX * serverConfig.cloneChangeableTime * gameConfig.INTERVAL,
     y : position.y + unitSpeedY * serverConfig.cloneChangeableTime * gameConfig.INTERVAL

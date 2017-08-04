@@ -237,6 +237,10 @@ function setupSocket(){
   socket.on('userLeave', function(objID){
     Manager.kickUser(objID);
   });
+  socket.on('userFusion', function(userData, cloneID){
+    Manager.deleteClone(userData.objectID, cloneID);
+    Manager.updateUserData(userData);
+  });
   socket.on('resSkill', function(userData){
     Manager.updateUserData(userData);
     console.log(userData.clones);

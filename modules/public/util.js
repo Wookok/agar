@@ -63,6 +63,7 @@ exports.rotate = function(){
 
 //must use with bind or call method
 exports.move = function(addPos){
+
   //calculate dist with target
   var distX = this.targetPosition.x - this.center.x;
   var distY = this.targetPosition.y - this.center.y;
@@ -82,8 +83,7 @@ exports.move = function(addPos){
 
   this.center.x += this.speed.x;
   this.center.y += this.speed.y;
-
-  if(addPos){
+  if(addPos && addPos.x && addPos.y){
     this.position.x += addPos.x;
     this.position.y += addPos.y;
 

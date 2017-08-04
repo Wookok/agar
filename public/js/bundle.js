@@ -22,7 +22,6 @@ Clone.prototype.move = function(){
   //find user and other clones
   var others = this.onMoveFindUserAndClones();
   //check distance with others
-  var collisionObjs = [];
   for(var i=0; i<others.length; i++){
     var vecX = this.center.x - others[i].center.x;
     var vecY = this.center.y - others[i].center.y;
@@ -30,7 +29,11 @@ Clone.prototype.move = function(){
     var dist = Math.sqrt(Math.pow(vecX, 2) + Math.pow(vecY, 2));
     if(dist < Math.abs(this.size.width/2 + others[i].size.width/2)){
       var distDiff = this.size.width/2 + others[i].size.width/2 - dist;
-      var ratioXYSqure = Math.pow(vecY/vecX, 2);
+      if(vecX === 0){
+        var ratioXYSqure = Infinity;
+      }else{
+        ratioXYSqure = Math.pow(vecY/vecX, 2);
+      }
       var distFactorX = distDiff * Math.sqrt(1/(1 + ratioXYSqure));
       var distFactorY = distDiff * Math.sqrt((ratioXYSqure)/(1 + ratioXYSqure));
 
@@ -39,6 +42,7 @@ Clone.prototype.move = function(){
     }
   }
   //if collision calculate distance
+  // console.log(this.position);
   util.move.call(this, addPos);
 };
 module.exports = Clone;
@@ -233,6 +237,13 @@ CManager.prototype = {
 	},
 	updateUsers : function(){
 
+	},
+	deleteClone : function(userID, cloneID){
+		for(var i=0; i<this.users[userID].clones.length; i++){
+			if(cloneID === this.users[userID].clones[i].objectID){
+				this.users[userID].clones.splice(i, 1);
+			}
+		}
 	},
 	updateUserData : function(userData){
 		if(this.checkUserAtUsers(userData)){
@@ -580,6 +591,7 @@ exports.rotate = function(){
 
 //must use with bind or call method
 exports.move = function(addPos){
+
   //calculate dist with target
   var distX = this.targetPosition.x - this.center.x;
   var distY = this.targetPosition.y - this.center.y;
@@ -599,8 +611,7 @@ exports.move = function(addPos){
 
   this.center.x += this.speed.x;
   this.center.y += this.speed.y;
-
-  if(addPos){
+  if(addPos && addPos.x && addPos.y){
     this.position.x += addPos.x;
     this.position.y += addPos.y;
 
@@ -960,6 +971,10 @@ function setupSocket(){
 
   socket.on('userLeave', function(objID){
     Manager.kickUser(objID);
+  });
+  socket.on('userFusion', function(userData, cloneID){
+    Manager.deleteClone(userData.objectID, cloneID);
+    Manager.updateUserData(userData);
   });
   socket.on('resSkill', function(userData){
     Manager.updateUserData(userData);

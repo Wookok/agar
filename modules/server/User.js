@@ -11,6 +11,8 @@ function User(id){
 
   this.mass = 100;
   this.socketID = id;
+
+  this.onFusion = new Function();
 };
 User.prototype = Object.create(LivingEntity.prototype);
 User.prototype.constructor = User;
@@ -49,6 +51,16 @@ User.prototype.makeClone = function(cloneID){
     }
     return others;
   };
+  clone.onFusion = function(){
+    thisUser.addMass(clone.mass);
+    for(var i=0; i<thisClones.length; i++){
+      if(thisClones[i].objectID === clone.objectID){
+        thisClones.splice(i, 1);
+        break;
+      }
+    }
+    thisUser.onFusion(thisUser, clone.objectID);
+  };
   clone.setCenter();
   clone.moveClone();
   // var timeout = setTimeout(function(){
@@ -59,9 +71,6 @@ User.prototype.makeClone = function(cloneID){
   //   clone.changeState(thisUser.gameConfig.OBJECT_STATE_MOVE);
   // }, serverConfig.cloneChangeableTime * 1000);
   // this.cloneTimeout.push(timeout);
-  setTimeout(function(){
-
-  }, serverConfig.cloneLifeTime * 1000);
   this.clones.push(clone);
   // console.log(this.clones);
 };

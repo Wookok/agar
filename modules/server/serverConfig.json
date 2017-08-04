@@ -1,5 +1,6 @@
 {
   "cloneLifeTime" : 3,
   "cloneChangeableTime" : 1,
-  "cloneSpeedRate" : 1.5
+  "cloneSpeedRate" : 1.5,
+  "cloneFusionTime" : 3
 }

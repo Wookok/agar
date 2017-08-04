@@ -33,11 +33,16 @@ GM.onCreateFoods = function(foods){
     foodsDatas.push(GM.updateFoodDataSetting(foods[i]));
   }
   io.sockets.emit('createFoods', foodsDatas);
-}
+};
 GM.onDeleteFood = function(foodID, affctedID, affectedRadius){
   io.sockets.emit('deleteFoodAndAddUserMass', foodID, affctedID, affectedRadius);
 };
-
+GM.onUserFusion = function(user, cloneID){
+  console.log('fusion!!');
+  var userData = GM.updateDataSetting(user);
+  console.log(cloneID);
+  io.sockets.emit('userFusion', userData, cloneID);
+};
 io.on('connection', function(socket){
   console.log('user connect : ' + socket.id);
 
@@ -79,7 +84,7 @@ io.on('connection', function(socket){
     GM.fireClone(user);
 
     var userData = GM.updateDataSetting(user);
-    console.log('reqSkill' , + userData.clones.length);
+
     io.sockets.emit('resSkill', userData);
   });
   socket.on('disconnect', function(){

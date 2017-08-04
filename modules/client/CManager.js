@@ -64,6 +64,13 @@ CManager.prototype = {
 	updateUsers : function(){
 
 	},
+	deleteClone : function(userID, cloneID){
+		for(var i=0; i<this.users[userID].clones.length; i++){
+			if(cloneID === this.users[userID].clones[i].objectID){
+				this.users[userID].clones.splice(i, 1);
+			}
+		}
+	},
 	updateUserData : function(userData){
 		if(this.checkUserAtUsers(userData)){
 			this.users[userData.objectID].position = util.worldToLocalPosition(userData.position, this.gameConfig.userOffset);
