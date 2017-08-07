@@ -27,6 +27,10 @@ var INTERVAL_TIMER = 1000/gameConfig.INTERVAL;
 
 var io = socketio.listen(server);
 
+GM.onUpdateUser = function(){
+  var userDatas = GM.updateDataSettings();
+  io.sockets.emit('updateUser', userDatas);
+}
 GM.onCreateFoods = function(foods){
   var foodsDatas = [];
   for(var i=0; i<Object.keys(foods).length; i++){
@@ -37,12 +41,7 @@ GM.onCreateFoods = function(foods){
 GM.onDeleteFood = function(foodID, affctedID, affectedRadius){
   io.sockets.emit('deleteFoodAndAddUserMass', foodID, affctedID, affectedRadius);
 };
-GM.onUserFusion = function(user, cloneID){
-  console.log('fusion!!');
-  var userData = GM.updateDataSetting(user);
-  console.log(cloneID);
-  io.sockets.emit('userFusion', userData, cloneID);
-};
+
 io.on('connection', function(socket){
   console.log('user connect : ' + socket.id);
 
@@ -72,27 +71,22 @@ io.on('connection', function(socket){
     socket.emit('resStartGame', userDatas, foodsDatas);
   });
 
-  socket.on('reqMove', function(targetPosition, localOffset){
+  socket.on('reqMove', function(targetPosition){
     // var newTargetPosition = util.localToWorldPosition(targetPosition, localOffset);
     GM.setUserTargetAndMove(user, targetPosition);
 
     var data = GM.updateDataSetting(user);
-    io.sockets.emit('resMove', data);
   });
 
   socket.on('reqSkill', function(){
     GM.fireClone(user);
-
-    var userData = GM.updateDataSetting(user);
-
-    io.sockets.emit('resSkill', userData);
   });
   socket.on('disconnect', function(){
     if(user.constructor === User){
       GM.stopUser(user);
       GM.kickUser(user);
-      user = null;
       io.sockets.emit('userLeave', user.objectID);
+      user = null;
     }
     if(updateUserInterval){
       clearInterval(updateUserInterval);
@@ -101,16 +95,3 @@ io.on('connection', function(socket){
     console.log('user disconnect :' + socket.id);
   });
 });
-//
-// //server util functions
-// function setCanvasScale(windowSize, canvasMaxSize){
-//   if(windowSize.width >= canvasMaxLocalSize.width || windowSize.height >= canvasMaxLocalSize.height){
-//     var scaleFactor = (windowSize.width / canvasMaxLocalSize.width) > (windowSize.height / canvasMaxLocalSize.height) ?
-//                   (windowSize.width / canvasMaxLocalSize.width) : (windowSize.height / canvasMaxLocalSize.height);
-//     // localConfig.canvasSize = {
-//     //   width : config.canvasMaxLocalSize.width,
-//     //   height : config.canvasMaxLocalSize.height
-//     // };
-//   }
-//   return 1;
-// }

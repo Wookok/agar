@@ -18,7 +18,6 @@ function Clone(base, id, maxSpeed, targetPosition, mass, radius){
 
   this.mass = mass;
   this.setSize(radius * 2, radius * 2);
-
   this.setMaxSpeed(maxSpeed);
   this.targetPosition = targetPosition;
 
@@ -36,6 +35,8 @@ Clone.prototype.addMass = function(mass){
 }
 Clone.prototype.moveClone = function(){
   this.setSpeed();
+  this.position.x += this.speed.x;
+  this.position.y += this.speed.y;
   this.changeState(gameConfig.OBJECT_STATE_MOVE);
 };
 Clone.prototype.checkChangeAble = function(){
@@ -60,34 +61,50 @@ Clone.prototype.fusion = function(){
 };
 Clone.prototype.move = function(){
   var addPos = {x : 0, y : 0};
-  //find user and other clones
-  var others = this.onMoveFindUserAndClones();
-  //check distance with others
-  for(var i=0; i<others.length; i++){
-    var vecX = this.center.x - others[i].center.x;
-    var vecY = this.center.y - others[i].center.y;
+  if(this.checkChangeAble()){
+    //find user and other clones
+    var others = this.onMoveFindUserAndClones();
+    //check distance with others
+    for(var i=0; i<others.length; i++){
+      var vecX = this.center.x - others[i].center.x;
+      var vecY = this.center.y - others[i].center.y;
 
-    var dist = Math.sqrt(Math.pow(vecX, 2) + Math.pow(vecY, 2));
-    if(dist < Math.abs(this.size.width/2 + others[i].size.width/2)){
-      if(this.checkDoFusion()){
-        this.fusion();
-      }else{
-        var distDiff = this.size.width/2 + others[i].size.width/2 - dist;
-        if(vecX === 0){
-          var ratioXYSqure = Infinity;
+      var dist = Math.sqrt(Math.pow(vecX, 2) + Math.pow(vecY, 2));
+      if(dist < Math.abs(this.size.width/2 + others[i].size.width/2)){
+        if(this.checkDoFusion()){
+          this.fusion();
         }else{
-          ratioXYSqure = Math.pow(vecY/vecX, 2);
-        }
-        var distFactorX = distDiff * Math.sqrt(1/(1 + ratioXYSqure));
-        var distFactorY = distDiff * Math.sqrt((ratioXYSqure)/(1 + ratioXYSqure));
+          var distDiff = this.size.width/2 + others[i].size.width/2 - dist;
+          if(vecX === 0 && vecY === 0){
+            var distFactorX = 1;
+            var distFactorY = 1;
+            addPos.x += this.speed.x / 10;
+            addPos.y += this.speed.y / 10;
+          }else if(vecX === 0){
+            distFactorX = 1;
+            distFactorY = 0;
+            addPos.x += this.speed.x / 10;
+          }else if(vecY === 0){
+            distFactorX = 0;
+            distFactorY = 1;
+            addPos.y += this.speed.y / 10;
+          }else{
+            ratioXYSqure = Math.pow(vecY/vecX, 2);
+            distFactorX = distDiff * Math.sqrt(1/(1 + ratioXYSqure));
+            distFactorY = distDiff * Math.sqrt((ratioXYSqure)/(1 + ratioXYSqure));
+          }
 
-        addPos.x += (vecX > 0 ? 1 : -1) * distFactorX;
-        addPos.y += (vecY > 0 ? 1 : -1) * distFactorY;
+          addPos.x += (vecX >= 0 ? 1 : -1) * distFactorX / 10;
+          addPos.y += (vecY >= 0 ? 1 : -1) * distFactorY / 10;
+        }
       }
     }
   }
   //if collision calculate distance
   util.move.call(this, addPos);
+  if(addPos.x !== 0|| addPos.y !==0){
+    this.setSpeed();
+  }
 };
 module.exports = Clone;
 // Clone.prototype.setTargetPositionAndInitMaxSpeed = function(targetPosition, maxSpeed){

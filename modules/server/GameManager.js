@@ -12,6 +12,7 @@ function GameManager(){
   this.foods = [];
   this.updateInteval = false;
   this.affectInterval = false;
+  this.sendPacketInterval = false;
 
   this.userTree = new QuadTree({
     width : gameConfig.CANVAS_MAX_SIZE.width,
@@ -35,6 +36,7 @@ function GameManager(){
   this.onCreateFoods = new Function();
   this.onDeleteFood = new Function();
   this.onUserFusion = new Function();
+  this.onUpdateUser = new Function();
 };
 
 GameManager.prototype.start = function(){
@@ -88,8 +90,13 @@ GameManager.prototype.updateGame = function(){
   if(this.affectInterval === false){
     this.affectInterval = setInterval(affectIntervalHandler.bind(this), INTERVAL_TIMER);
   }
+  if(this.sendPacketInterval === false){
+    this.sendPacketInterval = setInterval(sendPacketIntervalHandler.bind(this), INTERVAL_TIMER);
+  }
 };
-
+function sendPacketIntervalHandler(){
+  this.onUpdateUser();
+};
 GameManager.prototype.fireClone = function(user){
   var cloneID = SUtil.generateRandomUniqueID('C', user.clones);
   user.makeClone(cloneID);
@@ -140,7 +147,7 @@ GameManager.prototype.initializeUser = function(user){
   user.setRotateSpeed(60);
   user.setMaxSpeed(10);
 
-  user.onFusion = this.onUserFusion;
+  // user.onFusion = this.onUserFusion;
 };
 GameManager.prototype.stopUser = function(user){
   user.stop();
@@ -164,43 +171,18 @@ GameManager.prototype.updateDataSettings = function(){
     for(var i=0; i<Object.keys(this.users[index].clones).length; i++){
         clonesData.push({
           objectID : this.users[index].clones[i].objectID,
-
-          currentState : this.users[index].clones[i].currentState,
           position : this.users[index].clones[i].position,
-          targetPosition : this.users[index].clones[i].targetPosition,
-
-          // speed : this.users[index].speed,
-          maxSpeed : this.users[index].clones[i].maxSpeed,
-
-          direction : this.users[index].clones[i].direction,
-
-          rotateSpeed :  this.users[index].clones[i].rotateSpeed,
-          // targetDirection : this.users[index].targetDirection,
-
           size : this.users[index].clones[i].size
         });
     }
     var tempUser = {
       objectID : index,
-
-      currentState : this.users[index].currentState,
       position : this.users[index].position,
-      targetPosition : this.users[index].targetPosition,
-
-      // speed : this.users[index].speed,
-      maxSpeed : this.users[index].maxSpeed,
-
-      direction : this.users[index].direction,
-
-      rotateSpeed :  this.users[index].rotateSpeed,
-      // targetDirection : this.users[index].targetDirection,
-
       size : this.users[index].size,
       clones : clonesData
     };
     userData.push(tempUser);
   };
-
   return userData;
 };
 GameManager.prototype.updateDataSetting = function(user){
@@ -208,36 +190,13 @@ GameManager.prototype.updateDataSetting = function(user){
   for(var i=0; i<Object.keys(user.clones).length; i++){
       clonesData.push({
         objectID : user.clones[i].objectID,
-
-        currentState : user.clones[i].currentState,
         position : user.clones[i].position,
-        targetPosition : user.clones[i].targetPosition,
-
-        // speed : this.users[index].speed,
-        maxSpeed : user.clones[i].maxSpeed,
-
-        direction : user.clones[i].direction,
-
-        rotateSpeed : user.clones[i].rotateSpeed,
-        // targetDirection : this.users[index].targetDirection,
-
         size : user.clones[i].size
       });
   }
   var updateUser = {
     objectID : user.objectID,
-
-    currentState : user.currentState,
     position : user.position,
-    targetPosition : user.targetPosition,
-
-    // speed : user.speed,
-    maxSpeed : user.maxSpeed,
-    direction : user.direction,
-
-    rotateSpeed :  user.rotateSpeed,
-    // targetDirection : user.targetDirection,
-
     size : user.size,
     clones : clonesData
   };

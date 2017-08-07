@@ -38,7 +38,6 @@ User.prototype.makeClone = function(cloneID){
   this.changeMass();
   var radius = SUtil.massToRadius(cloneMass);
   var clone = new Clone(this, cloneID, cloneMaxSpeed, targetPosition, cloneMass, radius);
-
   var thisClones = this.clones;
   var thisUser = this;
   clone.onMoveFindUserAndClones = function(){
