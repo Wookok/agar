@@ -1,6 +1,10 @@
 {
-  "cloneLifeTime" : 3,
+  "baseMaxSpeed" : 10,
+  "baseRotateSpeed" : 30,
+  "baseMass" : 100,
+
   "cloneChangeableTime" : 1,
   "cloneSpeedRate" : 1.5,
-  "cloneFusionTime" : 3
+  "cloneFusionTime" : 3,
+  "cloneableMass" : 100
 }

@@ -4,12 +4,12 @@ var SUtil = require('./ServerUtil.js');
 var serverConfig = require('./serverConfig.json');
 var LivingEntity = require('./LivingEntity.js');
 
-function Clone(base, id, maxSpeed, targetPosition, mass, radius){
+function Clone(base, userID, id, maxSpeed, targetPosition, mass, radius){
   LivingEntity.call(this);
   this.startTime = Date.now();
 
   this.objectID = id;
-  this.userID = base.objectID;
+  this.userID = userID;
   this.position.x = base.position.x;
   this.position.y = base.position.y;
   this.direction = base.direction;
@@ -74,7 +74,6 @@ Clone.prototype.move = function(){
         if(this.checkDoFusion()){
           this.fusion();
         }else{
-          var distDiff = this.size.width/2 + others[i].size.width/2 - dist;
           if(vecX === 0 && vecY === 0){
             var distFactorX = 1;
             var distFactorY = 1;
@@ -89,6 +88,7 @@ Clone.prototype.move = function(){
             distFactorY = 1;
             addPos.y += this.speed.y / 10;
           }else{
+            var distDiff = this.size.width/2 + others[i].size.width/2 - dist;
             ratioXYSqure = Math.pow(vecY/vecX, 2);
             distFactorX = distDiff * Math.sqrt(1/(1 + ratioXYSqure));
             distFactorY = distDiff * Math.sqrt((ratioXYSqure)/(1 + ratioXYSqure));
@@ -105,6 +105,12 @@ Clone.prototype.move = function(){
   if(addPos.x !== 0|| addPos.y !==0){
     this.setSpeed();
   }
+};
+Clone.prototype.divideMass = function(){
+  this.mass = this.mass/2;
+  var radius = SUtil.massToRadius(this.mass);
+  this.setSize(radius * 2, radius * 2);
+  this.setCenter();
 };
 module.exports = Clone;
 // Clone.prototype.setTargetPositionAndInitMaxSpeed = function(targetPosition, maxSpeed){

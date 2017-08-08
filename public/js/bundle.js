@@ -579,7 +579,7 @@ function drawUser(){
     ctx.closePath();
 
     //draw clones
-    for(var i=0; i<Object.keys(Manager.users[index].clones).length; i++){
+    for(var i=0; i<Manager.users[index].clones.length; i++){
       ctx.beginPath();
       ctx.fillStyle = '#aaaaaa';
       ctx.strokeStyle = "#000000";
@@ -593,18 +593,10 @@ function drawUser(){
       ctx.fill();
       ctx.closePath();
     }
-
-    // ctx.save();
-    // ctx.setTransform(1,0,0,1,0,0);
-    // ctx.translate(Manager.users[index].center.x, Manager.users[index].center.y);
-    // ctx.rotate(radian);
-    // ctx.drawImage(userImage, 0, 0, 128, 128,-Manager.users[index].size.width/2 * gameConfig.scaleFactor, -Manager.users[index].size.height/2 * gameConfig.scaleFactor, Manager.users[index].size.width * gameConfig.scaleFactor, Manager.users[index].size.width * gameConfig.scaleFactor);
-    //
-    // ctx.restore();
   }
 };
 function drawFoods(){
-  for(var i=0; i<Object.keys(Manager.foods).length; i++){
+  for(var i=0; i<Manager.foods.length; i++){
     if(Manager.foods[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.foods[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
       && Manager.foods[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.foods[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
         ctx.beginPath();

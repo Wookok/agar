@@ -1,5 +1,6 @@
 var config = require('../../config.json');
 var gameConfig = require('../public/gameConfig.json');
+var serverConfig = require('./serverConfig.json');
 var util = require('../public/util.js');
 var SUtil = require('./ServerUtil');
 var QuadTree = require('quadtree-lib');
@@ -100,6 +101,9 @@ function sendPacketIntervalHandler(){
 GameManager.prototype.fireClone = function(user){
   var cloneID = SUtil.generateRandomUniqueID('C', user.clones);
   user.makeClone(cloneID);
+  for(var i=0; i<Object.keys(user.clones).length; i++){
+    var randID = SUtil.generateRandomUniqueID('C', user.clones);
+  }
 };
 //setting User for moving and move user;
 GameManager.prototype.setUserTargetAndMove = function(user, targetPosition){
@@ -141,12 +145,11 @@ GameManager.prototype.initializeUser = function(user){
   var randomID = SUtil.generateRandomUniqueID('U', this.users);
   user.assignID(randomID);
 
-  user.setSize(64,64);
   user.setPosition(10, 10);
 
-  user.setRotateSpeed(60);
-  user.setMaxSpeed(10);
-
+  user.setRotateSpeed(serverConfig.baseMaxSpeed);
+  user.setMaxSpeed(serverConfig.baseRotateSpeed);
+  user.setMass(serverConfig.baseMass);
   // user.onFusion = this.onUserFusion;
 };
 GameManager.prototype.stopUser = function(user){
@@ -224,9 +227,6 @@ GameManager.prototype.updateFoodDataSetting = function(food){
   };
 }
 function updateIntervalHandler(){
-  //staticEle : food, collider : user
-  // console.log(this.userEles);
-  // console.log('userEles.length : ' + this.userEles.length);
   for(var i=0; i<this.userEles.length; i++){
     var tempCollider = this.userEles[i];
     var collisionObjs = util.checkCircleCollision(this.staticTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
@@ -287,6 +287,10 @@ function affectIntervalHandler(){
   var index = this.affectedEles.length
   while(index--){
     if(this.affectedEles[index].cloneID){
+      console.log(this.users);
+      console.log(this.affectedEles[index].userID);
+      console.log(this.users[this.affectedEles[index].userID]);
+      console.log(this.users[this.affectedEles[index].userID].clones);
       for(var i=0; i<Object.keys(this.users[this.affectedEles[index].userID].clones).length; i++){
         if(this.users[this.affectedEles[index].userID].clones[i].objectID === this.affectedEles[index].cloneID){
           var cloneIndex = i;
