@@ -6,5 +6,10 @@
   "cloneChangeableTime" : 1,
   "cloneSpeedRate" : 1.5,
   "cloneFusionTime" : 3,
-  "cloneableMass" : 100
+  "cloneableMass" : 100,
+
+  "COLLISION_WITH_FOOD" : 1,
+  "COLLISION_WITH_USER" : 2,
+
+  "collisionFactor" : 1.2
 }

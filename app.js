@@ -38,10 +38,12 @@ GM.onCreateFoods = function(foods){
   }
   io.sockets.emit('createFoods', foodsDatas);
 };
-GM.onDeleteFood = function(foodID, affctedID, affectedRadius){
-  io.sockets.emit('deleteFoodAndAddUserMass', foodID, affctedID, affectedRadius);
+GM.onDeleteFood = function(foodID){
+  io.sockets.emit('deleteFoodAndAddUserMass', foodID);
 };
-
+GM.onUserDestroy = function(userID){
+  io.sockets.emit('userDestroy', userID);
+}
 io.on('connection', function(socket){
   console.log('user connect : ' + socket.id);
 

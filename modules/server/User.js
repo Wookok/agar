@@ -13,6 +13,7 @@ function User(id){
   this.socketID = id;
 
   this.onFusion = new Function();
+  this.onDestroy = new Function();
 };
 User.prototype = Object.create(LivingEntity.prototype);
 User.prototype.constructor = User;
@@ -35,6 +36,13 @@ User.prototype.divideMass = function(){
   var radius = SUtil.massToRadius(this.mass);
   this.setSize(radius * 2, radius * 2);
   this.setCenter();
+};
+User.prototype.destroy = function(){
+  if(this.clones.length === 0){
+    this.onDestroy();
+  }else{
+    console.log('change to clone');
+  }
 };
 
 //clone
@@ -68,6 +76,12 @@ User.prototype.makeClone = function(cloneID){
       }
       thisUser.onFusion(thisUser, clone.objectID);
     };
+    clone.onDestroy = function(){
+      var index = thisClones.indexOf(clone);
+      if(index !== -1){
+        thisClones.splice(index, 1);
+      }
+    }
     clone.setCenter();
     clone.moveClone();
 

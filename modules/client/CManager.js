@@ -44,9 +44,16 @@ CManager.prototype = {
 	},
 	kickUser : function(objID){
 		if(!(objID in this.users)){
-			console.log("user already out");
+			console.log('user already out');
 		}else{
 			delete this.users[objID];
+		}
+	},
+	deleteUser : function(userID){
+		if(userID in this.users){
+			delete this.users[userID];
+		}else{
+			console.log('user already deleted');
 		}
 	},
 	updateUsers : function(userDatas){

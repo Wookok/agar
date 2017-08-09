@@ -22,6 +22,7 @@ function Clone(base, userID, id, maxSpeed, targetPosition, mass, radius){
   this.targetPosition = targetPosition;
 
   this.onFusion = new Function();
+  this.onDestroy = new Function();
   this.onMoveFindUserAndClones = new Function();
 };
 Clone.prototype = Object.create(LivingEntity.prototype);
@@ -54,6 +55,9 @@ Clone.prototype.setCloneEle = function(){
     id : this.userID,
     cloneID : this.objectID
   };
+};
+Clone.prototype.destroy = function(){
+  this.onDestroy();
 };
 Clone.prototype.fusion = function(){
   this.stop();

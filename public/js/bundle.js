@@ -45,9 +45,16 @@ CManager.prototype = {
 	},
 	kickUser : function(objID){
 		if(!(objID in this.users)){
-			console.log("user already out");
+			console.log('user already out');
 		}else{
 			delete this.users[objID];
+		}
+	},
+	deleteUser : function(userID){
+		if(userID in this.users){
+			delete this.users[userID];
+		}else{
+			console.log('user already deleted');
 		}
 	},
 	updateUsers : function(userDatas){
@@ -187,7 +194,16 @@ exports.rotate = function(){
 
 //must use with bind or call method
 exports.move = function(addPos){
-
+  if(this.targetPosition.x < this.size.width/2){
+    this.targetPosition.x = this.size.width/2;
+  }else if(this.targetPosition.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
+    this.targetPosition.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
+  }
+  if(this.targetPosition.y < this.size.height/2){
+    this.targetPosition.y = this.size.height/2;
+  }else if(this.targetPosition.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
+    this.targetPosition.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
+  }
   //calculate dist with target
   var distX = this.targetPosition.x - this.center.x;
   var distY = this.targetPosition.y - this.center.y;
@@ -433,7 +449,7 @@ function game(){
 };
 //show end message and restart button
 function end(){
-
+  changeState(gameConfig.GAME_STATE_START_SCENE);
 };
 
 //functions
@@ -544,12 +560,18 @@ function setupSocket(){
   socket.on('createFoods', function(foodsDatas){
     Manager.createFoods(foodsDatas);
   });
-  socket.on('deleteFoodAndAddUserMass', function(foodID, userID, userRadius){
+  socket.on('deleteFoodAndAddUserMass', function(foodID){
     Manager.deleteFood(foodID);
   });
   socket.on('updateUser', function(userDatas){
     Manager.updateUsers(userDatas);
   });
+  socket.on('userDestroy', function(userID){
+    if(userID === gameConfig.userID){
+      changeState(gameConfig.GAME_STATE_END);
+    }
+    Manager.deleteUser(userID);
+  })
   socket.on('userLeave', function(objID){
     Manager.kickUser(objID);
   });

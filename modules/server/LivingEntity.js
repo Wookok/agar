@@ -54,11 +54,11 @@ LivingEntity.prototype.update = function(){
 };
 //rotate before move or fire skill etc..
 LivingEntity.prototype.rotate = function(){
-  util.rotate.call(this, deltaTime);
+  util.rotate.call(this);
 };
 //move after rotate
-LivingEntity.prototype.move = function(deltaTime){
-  util.move.call(this, deltaTime);
+LivingEntity.prototype.move = function(){
+  util.move.call(this);
 };
 LivingEntity.prototype.idle = function(){
   //do nothing or send packet;

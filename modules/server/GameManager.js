@@ -38,6 +38,7 @@ function GameManager(){
   this.onDeleteFood = new Function();
   this.onUserFusion = new Function();
   this.onUpdateUser = new Function();
+  this.onUserDestroy = new Function();
 };
 
 GameManager.prototype.start = function(){
@@ -120,6 +121,12 @@ GameManager.prototype.setUserTargetAndMove = function(user, targetPosition){
 // user join, kick, update
 GameManager.prototype.joinUser = function(user){
   this.users[user.objectID] = user;
+  var thisUsers = this.users
+  var thisOnUserDestroy = this.onUserDestroy;
+  user.onDestroy = function(){
+    delete thisUsers[user.objectID];
+    thisOnUserDestroy(user.objectID);
+  };
   this.foodsCount += gameConfig.FOOD_ADD_PER_USER;
   console.log(this.users);
   console.log(user.objectID + ' join in GameManager');
@@ -163,6 +170,50 @@ GameManager.prototype.deleteFood = function(foodID, affectedID, userRadius){
       this.onDeleteFood(foodID, affectedID, userRadius);
       return;
     }
+  }
+};
+GameManager.prototype.findWinnerAndLoser = function(userID1, userID2, cloneID1, cloneID2){
+  if(userID1 in this.users && userID2 in this.users){
+    if(cloneID1){
+      for(var i=0; i<this.users[userID1].clones.length; i++){
+        if(this.users[userID1].clones[i].objectID === cloneID1){
+          var col1 = this.users[userID1].clones[i];
+          break;
+        }
+      }
+    }else{
+      col1 = this.users[userID1];
+    }
+    if(cloneID2){
+      for(var i=0; i<this.users[userID2].clones.length; i++){
+        if(this.users[userID2].clones[i].objectID === cloneID2){
+          var col2 = this.users[userID2].clones[i];
+          break;
+        }
+      }
+    }else{
+      col2 = this.users[userID2];
+    }
+  }
+  if(col1 && col2){
+    if(col1.size.width > col2.size.width * serverConfig.collisionFactor){
+      return {
+        winner : col1,
+        loser : col2
+      }
+    }else if(col2.size.width > col1.size.width * serverConfig.collisionFactor){
+      // return {
+      //   winner : col2,
+      //   loser : col1
+      // };
+      return false;
+    }else{
+      console.log('nobody win');
+      return false;
+    }
+  }else{
+    console.log('cant find collider');
+    return false;
   }
 };
 // data setting for send to client
@@ -227,12 +278,13 @@ GameManager.prototype.updateFoodDataSetting = function(food){
   };
 }
 function updateIntervalHandler(){
+  //collision with food
   for(var i=0; i<this.userEles.length; i++){
     var tempCollider = this.userEles[i];
     var collisionObjs = util.checkCircleCollision(this.staticTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
     if(collisionObjs.length > 0){
       for(var j=0; j<collisionObjs.length; j++){
-        this.affectedEles.push({'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
+        this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_FOOD,'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
       }
     }
   }
@@ -241,7 +293,38 @@ function updateIntervalHandler(){
     var collisionObjs = util.checkCircleCollision(this.staticTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
     if(collisionObjs.length > 0){
       for(var j=0; j<collisionObjs.length; j++){
-        this.affectedEles.push({'cloneID' : tempCollider.cloneID,'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
+        this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_FOOD, 'cloneID' : tempCollider.cloneID,'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
+      }
+    }
+  }
+  //collision with other user
+  for(var i=0; i<this.userEles.length; i++){
+    var tempCollider = this.userEles[i];
+    var collisionObjs = util.checkCircleCollision(this.userTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
+    if(collisionObjs.length > 0){
+      for(var j=0; j<collisionObjs.length; j++){
+        if(collisionObjs[j].objectID){
+          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
+          'userOneID' : tempCollider.id, 'userTwoID' : collisionObjs[j].id, 'userTwoCloneID' : collisionObjs[j].objectID });
+        }else{
+          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
+          'userOneID' : tempCollider.id, 'userTwoID' : collisionObjs[j].id});
+        }
+      }
+    }
+  }
+  for(var i=0; i<this.userCloneEles.length; i++){
+    var tempCollider = this.userCloneEles[i];
+    var collisionObjs = util.checkCircleCollision(this.userTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
+    if(collisionObjs.length > 0){
+      for(var j=0; j<collisionObjs.length; j++){
+        if(collisionObjs[j].objectID){
+          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
+          'userOneID' : tempCollider.id, 'userOneCloneID' : tempCollider.objectID, 'userTwoID' : collisionObjs[j].id, 'userTwoCloneID' : collisionObjs[j].objectID });
+        }else{
+          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
+          'userOneID' : tempCollider.id, 'userOneCloneID' : tempCollider.objectID, 'userTwoID' : collisionObjs[j].id});
+        }
       }
     }
   }
@@ -286,26 +369,60 @@ function updateIntervalHandler(){
 function affectIntervalHandler(){
   var index = this.affectedEles.length
   while(index--){
-    if(this.affectedEles[index].cloneID){
-      console.log(this.users);
-      console.log(this.affectedEles[index].userID);
-      console.log(this.users[this.affectedEles[index].userID]);
-      console.log(this.users[this.affectedEles[index].userID].clones);
-      for(var i=0; i<Object.keys(this.users[this.affectedEles[index].userID].clones).length; i++){
-        if(this.users[this.affectedEles[index].userID].clones[i].objectID === this.affectedEles[index].cloneID){
-          var cloneIndex = i;
+    if(this.affectedEles[index].type === serverConfig.COLLISION_WITH_FOOD){
+      if(this.affectedEles[index].cloneID){
+        for(var i=0; i<Object.keys(this.users[this.affectedEles[index].userID].clones).length; i++){
+          if(this.users[this.affectedEles[index].userID].clones[i].objectID === this.affectedEles[index].cloneID){
+            var cloneIndex = i;
+          }
+        }
+        if(cloneIndex !== -1){
+          var cloneRadius = this.users[this.affectedEles[index].userID].clones[cloneIndex].addMass(this.affectedEles[index].foodMass);
+          this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].cloneID, cloneRadius);
+        }else{
+          console.log('cant find clone Index');
+        }
+      }else{
+        var userRadius = this.users[this.affectedEles[index].userID].addMass(this.affectedEles[index].foodMass);
+        //userMass will be used for inform to client
+        this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].userID, userRadius);
+      }
+    }else if(this.affectedEles[index].type === serverConfig.COLLISION_WITH_USER){
+      if(this.affectedEles[index].userOneCloneID){
+        if(this.affectedEles[index].userTwoCloneID){
+          //case 1 (clone to clone)
+          var winnerAndLoser = this.findWinnerAndLoser(this.affectedEles[index].userOneID,
+              this.affectedEles[index].userTwoID, this.affectedEles[index].userOneCloneID, this.affectedEles[index].userTwoCloneID);
+          if(winnerAndLoser){
+            winnerAndLoser.winner.addMass(winnerAndLoser.loser.mass);
+            winnerAndLoser.loser.destroy();
+          }
+        }else{
+          //case 2 (clone to user)
+          var winnerAndLoser = this.findWinnerAndLoser(this.affectedEles[index].userOneID,
+              this.affectedEles[index].userTwoID, this.affectedEles[index].userOneCloneID);
+          if(winnerAndLoser){
+            winnerAndLoser.winner.addMass(winnerAndLoser.loser.mass);
+            winnerAndLoser.loser.destroy();
+          }
+        }
+      }else if(this.affectedEles[index].userTwoCloneID){
+        //case 3 (user to clone)
+        var winnerAndLoser = this.findWinnerAndLoser(this.affectedEles[index].userOneID,
+            this.affectedEles[index].userTwoID, undefined, this.affectedEles[index].userTwoCloneID);
+        if(winnerAndLoser){
+          winnerAndLoser.winner.addMass(winnerAndLoser.loser.mass);
+          winnerAndLoser.loser.destroy();
+        }
+      }else{
+        //case 4 (user to user)
+        var winnerAndLoser = this.findWinnerAndLoser(this.affectedEles[index].userOneID,
+            this.affectedEles[index].userTwoID);
+        if(winnerAndLoser){
+          winnerAndLoser.winner.addMass(winnerAndLoser.loser.mass);
+          winnerAndLoser.loser.destroy();
         }
       }
-      if(cloneIndex !== -1){
-        var cloneRadius = this.users[this.affectedEles[index].userID].clones[cloneIndex].addMass(this.affectedEles[index].foodMass);
-        this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].cloneID, cloneRadius);
-      }else{
-        console.log('cant find clone Index');
-      }
-    }else{
-      var userRadius = this.users[this.affectedEles[index].userID].addMass(this.affectedEles[index].foodMass);
-      //userMass will be used for inform to client
-      this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].userID, userRadius);
     }
     this.affectedEles.splice(index, 1);
   }
