@@ -5,15 +5,19 @@ var util = require('../public/util.js');
 var SUtil = require('./ServerUtil');
 var QuadTree = require('quadtree-lib');
 var Food = require('./Food.js');
+var Virus = require('./Virus.js');
 
 var INTERVAL_TIMER = 1000/gameConfig.INTERVAL;
 
 function GameManager(){
   this.users = [];
   this.foods = [];
+  this.viruses = [];
+
   this.updateInteval = false;
   this.affectInterval = false;
   this.sendPacketInterval = false;
+  this.virusInterval = false;
 
   this.userTree = new QuadTree({
     width : gameConfig.CANVAS_MAX_SIZE.width,
@@ -33,7 +37,10 @@ function GameManager(){
   });
   this.staticEles = [];
 
-  this.foodsCount = gameConfig.FOOD_MIN_COUNT;
+  this.foodsCount = serverConfig.FOOD_MIN_COUNT;
+  this.virusesCount = serverConfig.VIRUS_MIN_COUNT;
+
+  this.onCreateVirus = new Function();
   this.onCreateFoods = new Function();
   this.onDeleteFood = new Function();
   this.onUserFusion = new Function();
@@ -52,8 +59,8 @@ GameManager.prototype.setFoods = function(){
   for(var i=0; i<this.foodsCount; i++){
     var randomID = SUtil.generateRandomUniqueID('F', this.foods);
     var food = new Food(randomID);
-    var randomRadius = SUtil.generateRandomRadius(gameConfig.FOOD_MIN_RADIUS, gameConfig.FOOD_MAX_RADIUS);
-    var randomPos = SUtil.generateRandomPos(this.staticTree, 0, 0, gameConfig.CANVAS_MAX_SIZE.width, gameConfig.CANVAS_MAX_SIZE.height,
+    var randomRadius = SUtil.generateRandomRadius(serverConfig.FOOD_MIN_RADIUS, serverConfig.FOOD_MAX_RADIUS);
+    var randomPos = SUtil.generateRandomPos(this.staticTree, randomRadius, randomRadius, gameConfig.CANVAS_MAX_SIZE.width, gameConfig.CANVAS_MAX_SIZE.height,
                                       randomRadius, gameConfig.FOOD_RANGE_WITH_OTHERS, randomID);
     var mass = SUtil.radiusToMass(randomRadius);
     var randomColor = SUtil.generateRandomColor();
@@ -71,7 +78,7 @@ GameManager.prototype.makeFood = function(count){
   for(var i=0; i<count; i++){
     var randomID = SUtil.generateRandomUniqueID('F', this.foods);
     var food = new Food(randomID);
-    var randomRadius = SUtil.generateRandomRadius(gameConfig.FOOD_MIN_RADIUS, gameConfig.FOOD_MAX_RADIUS);
+    var randomRadius = SUtil.generateRandomRadius(serverConfig.FOOD_MIN_RADIUS, serverConfig.FOOD_MAX_RADIUS);
     var randomPos = SUtil.generateRandomPos(this.staticTree, 0, 0, gameConfig.CANVAS_MAX_SIZE.width, gameConfig.CANVAS_MAX_SIZE.height,
                                       randomRadius, gameConfig.FOOD_RANGE_WITH_OTHERS, randomID);
     var mass = SUtil.radiusToMass(randomRadius);
@@ -95,16 +102,36 @@ GameManager.prototype.updateGame = function(){
   if(this.sendPacketInterval === false){
     this.sendPacketInterval = setInterval(sendPacketIntervalHandler.bind(this), INTERVAL_TIMER);
   }
+  if(this.virusInterval === false){
+    this.createViruses(this.virusesCount);
+    this.virusInterval = setInterval(virusIntervalHandler.bind(this), serverConfig.VIRUS_INTERVAL_TIMER);
+  }
+};
+function virusIntervalHandler(){
+  //check to create virus
+  if(this.viruses.length < Math.floor(this.virusesCount)){
+    this.createViruses(this.viruses.length - Math.floor(this.virusesCount));
+  }
 };
 function sendPacketIntervalHandler(){
   this.onUpdateUser();
 };
+GameManager.prototype.createViruses = function(count){
+  var createdVirus = [];
+  while (count--) {
+    var virusID = SUtil.generateRandomUniqueID('V', this.viruses);
+    var radius = SUtil.generateRandomRadius(serverConfig.VIRUS_MIN_RADIUS, serverConfig.VIRUS_MAX_RADIUS);
+    var position = SUtil.generateRandomPos(this.staticTree, radius, radius, gameConfig.CANVAS_MAX_SIZE.width - radius,
+        gameConfig.CANVAS_MAX_SIZE.height - radius, virusID, this.userTree);
+    var virus = new Virus(virusID, position, radius);
+    this.viruses.push(virus);
+    createdVirus.push(virus);
+  }
+  this.onCreateVirus(createdVirus);
+};
 GameManager.prototype.fireClone = function(user){
   var cloneID = SUtil.generateRandomUniqueID('C', user.clones);
   user.makeClone(cloneID);
-  for(var i=0; i<Object.keys(user.clones).length; i++){
-    var randID = SUtil.generateRandomUniqueID('C', user.clones);
-  }
 };
 //setting User for moving and move user;
 GameManager.prototype.setUserTargetAndMove = function(user, targetPosition){
@@ -127,7 +154,7 @@ GameManager.prototype.joinUser = function(user){
     delete thisUsers[user.objectID];
     thisOnUserDestroy(user.objectID);
   };
-  this.foodsCount += gameConfig.FOOD_ADD_PER_USER;
+  this.foodsCount += serverConfig.FOOD_ADD_PER_USER;
   console.log(this.users);
   console.log(user.objectID + ' join in GameManager');
 };
@@ -136,7 +163,7 @@ GameManager.prototype.kickUser = function(user){
     console.log("can`t find user`s ID. something is wrong");
   }else{
     delete this.users[user.objectID];
-    this.foodsCount -= gameConfig.FOOD_ADD_PER_USER;
+    this.foodsCount -= serverConfig.FOOD_ADD_PER_USER;
   }
 };
 GameManager.prototype.updateUser = function(user){
@@ -269,6 +296,24 @@ GameManager.prototype.updateFoodsDataSettings = function(){
   }
   return foodsDatas;
 };
+GameManager.prototype.updateVirusesDataSettings = function(){
+  var virusesDatas = []
+  for(var i=0; i<this.viruses.length; i++){
+    virusesDatas.push({
+      objectID : this.viruses[i].objectID,
+      position : this.viruses[i].position,
+      size : this.viruses[i].size
+    });
+  }
+  return virusesDatas;
+};
+GameManager.prototype.updateVirusDataSetting = function(virus){
+  return {
+    objectID : virus.objectID,
+    position : virus.position,
+    size : virus.size
+  };
+};
 GameManager.prototype.updateFoodDataSetting = function(food){
   return {
     objectID : food.objectID,
@@ -276,15 +321,21 @@ GameManager.prototype.updateFoodDataSetting = function(food){
     position : food.position,
     size : food.size
   };
-}
+};
 function updateIntervalHandler(){
-  //collision with food
+  //collision with food and virus
   for(var i=0; i<this.userEles.length; i++){
     var tempCollider = this.userEles[i];
     var collisionObjs = util.checkCircleCollision(this.staticTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
     if(collisionObjs.length > 0){
       for(var j=0; j<collisionObjs.length; j++){
-        this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_FOOD,'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
+        console.log(collisionObjs);
+        if(collisionObjs[j].id.substr(0, 1) === 'F'){
+          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_FOOD,'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
+        }else if(collisionObjs[j].id.substr(0, 1) === 'V'){
+          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_VIRUS,'userID' : tempCollider.id, 'virusID' : collisionObjs[j].id });
+        }
+        console.log(this.affectedEles);
       }
     }
   }
@@ -293,7 +344,11 @@ function updateIntervalHandler(){
     var collisionObjs = util.checkCircleCollision(this.staticTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
     if(collisionObjs.length > 0){
       for(var j=0; j<collisionObjs.length; j++){
-        this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_FOOD, 'cloneID' : tempCollider.cloneID,'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
+        if(collisionObjs[j].id.substr(0, 1) === 'F'){
+          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_FOOD, 'cloneID' : tempCollider.cloneID,'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
+        }else if(collisionObjs[j].id.substr(0, 1) === 'V'){
+          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_VIRUS, 'cloneID' : tempCollider.cloneID, 'userID' : tempCollider.id, 'virusID' : collisionObjs[j].id });
+        }
       }
     }
   }
@@ -353,12 +408,15 @@ function updateIntervalHandler(){
     this.userEles.push(this.users[index].userTreeEle);
   }
   //updateFoodsArray
-  var addFoodsCount = this.foodsCount - Object.keys(this.foods).length;
+  var addFoodsCount = this.foodsCount - this.foods.length;
   if(addFoodsCount > 0){
     this.makeFood(addFoodsCount);
   }
-  for(var i=0; i<Object.keys(this.foods).length; i++){
+  for(var i=0; i<this.foods.length; i++){
     this.staticEles.push(this.foods[i].staticEle);
+  }
+  for(var i=0; i<this.viruses.length; i++){
+    this.staticEles.push(this.viruses[i].staticEle);
   }
 
   //put users data to tree
@@ -374,9 +432,10 @@ function affectIntervalHandler(){
         for(var i=0; i<Object.keys(this.users[this.affectedEles[index].userID].clones).length; i++){
           if(this.users[this.affectedEles[index].userID].clones[i].objectID === this.affectedEles[index].cloneID){
             var cloneIndex = i;
+            break;
           }
         }
-        if(cloneIndex !== -1){
+        if(cloneIndex !== undefined && cloneIndex !== -1){
           var cloneRadius = this.users[this.affectedEles[index].userID].clones[cloneIndex].addMass(this.affectedEles[index].foodMass);
           this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].cloneID, cloneRadius);
         }else{
@@ -386,6 +445,26 @@ function affectIntervalHandler(){
         var userRadius = this.users[this.affectedEles[index].userID].addMass(this.affectedEles[index].foodMass);
         //userMass will be used for inform to client
         this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].userID, userRadius);
+      }
+    }else if(this.affectedEles[index].type === serverConfig.COLLISION_WITH_VIRUS){
+      if(this.affectedEles[index].cloneID){
+        for(var i=0; i<Object.keys(this.users[this.affectedEles[index].userID].clones).length; i++){
+          if(this.users[this.affectedEles[index].userID].clones[i].objectID === this.affectedEles[index].cloneID){
+            var cloneIndex = i;
+            break;
+          }
+        }
+        if(cloneIndex !== undefined && cloneIndex !== -1){
+          if(SUtil.checkToCloneable(this.users[this.affectedEles[index].userID].clones[cloneIndex].mass)){
+            this.users[this.affectedEles[index].userID].makeOnlyClonesClone(this.affectedEles[index].cloneID);
+          }
+        }else{
+          console.log('cant find clone Index');
+        }
+      }else{
+        if(SUtil.checkToCloneable(this.users[this.affectedEles[index].userID].mass)){
+          this.users[this.affectedEles[index].userID].makeOnlyUserClone();
+        }
       }
     }else if(this.affectedEles[index].type === serverConfig.COLLISION_WITH_USER){
       if(this.affectedEles[index].userOneCloneID){

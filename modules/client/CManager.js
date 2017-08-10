@@ -5,6 +5,7 @@ var CManager = function(){
 	//all users
 	this.users = [];
 	this.foods = [];
+	this.viruses = [];
 };
 
 CManager.prototype = {
@@ -24,13 +25,28 @@ CManager.prototype = {
 	},
 	setFoods : function(foodsDatas){
 		for(var i =0; i<Object.keys(foodsDatas).length; i++){
-			foodsDatas[i].position = foodsDatas[i].position;
 			this.foods.push(foodsDatas[i]);
+		}
+	},
+	setViruses : function(virusesDatas){
+		for(var i=0; i<virusesDatas.length; i++){
+			this.viruses.push(virusesDatas[i]);
+		}
+	},
+	createViruses : function(virusesDatas){
+		for(var i=0; i<virusesDatas.length; i++){
+			this.viruses.push(virusesDatas[i]);
+		}
+	},
+	deleteVirus : function(virusID){
+		for(var i=0; i<this.viruses.length; i++){
+			if(virusID === this.viruses[i].objectID){
+				this.viruses.splice(i, 1);
+			}
 		}
 	},
 	createFoods : function(foodsDatas){
 		for(var i =0; i<Object.keys(foodsDatas).length; i++){
-			foodsDatas[i].position = foodsDatas[i].position;
 			this.foods.push(foodsDatas[i]);
 		}
 	},

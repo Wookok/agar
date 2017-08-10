@@ -12,7 +12,6 @@ function User(id){
   this.mass = 0;
   this.socketID = id;
 
-  this.onFusion = new Function();
   this.onDestroy = new Function();
 };
 User.prototype = Object.create(LivingEntity.prototype);
@@ -44,10 +43,9 @@ User.prototype.destroy = function(){
     console.log('change to clone');
   }
 };
-
 //clone
 User.prototype.makeClone = function(cloneID){
-  if(this.mass >= serverConfig.cloneableMass){
+  if(SUtil.checkToCloneable(this.mass)){
     var cloneMaxSpeed = SUtil.calcCloneSpeed(this.maxSpeed);
     var targetPosition = SUtil.calcCloneTargetPosition(this.position, this.direction, cloneMaxSpeed);
     var cloneMass = this.mass/2;
@@ -74,7 +72,6 @@ User.prototype.makeClone = function(cloneID){
       if(index !== -1){
         thisClones.splice(index, 1);
       }
-      thisUser.onFusion(thisUser, clone.objectID);
     };
     clone.onDestroy = function(){
       var index = thisClones.indexOf(clone);
@@ -86,7 +83,7 @@ User.prototype.makeClone = function(cloneID){
     clone.moveClone();
 
     for(var i=this.clones.length; i>0; i--){
-      if(this.clones[i - 1].mass >= serverConfig.cloneableMass){
+      if(SUtil.checkToCloneable(this.clones[i - 1].mass)){
         var clonesCloneID = SUtil.generateRandomUniqueID('C', this.clones);
         var clonesCloneMaxSpeed = SUtil.calcCloneSpeed(this.clones[i - 1].maxSpeed);
         var clonesTargetPosition = SUtil.calcCloneTargetPosition(this.clones[i - 1].position, this.clones[i - 1].direction, clonesCloneMaxSpeed);
@@ -111,7 +108,6 @@ User.prototype.makeClone = function(cloneID){
           if(index !== -1){
             thisClones.splice(index, 1);
           }
-          thisUser.onFusion(thisUser, clone.objectID);
         };
         clonesClone.setCenter();
         clonesClone.moveClone();
@@ -119,6 +115,86 @@ User.prototype.makeClone = function(cloneID){
       }
     }
     this.clones.push(clone);
+  }
+};
+User.prototype.makeOnlyUserClone = function(){
+  var cloneID = SUtil.generateRandomUniqueID('C', this.clones);
+  var cloneMaxSpeed = SUtil.calcCloneSpeed(this.maxSpeed);
+  var targetPosition = SUtil.calcCloneTargetPosition(this.position, this.direction, cloneMaxSpeed);
+  var cloneMass = this.mass/2;
+  this.divideMass();
+  var radius = SUtil.massToRadius(cloneMass);
+  var clone = new Clone(this, this.objectID, cloneID, cloneMaxSpeed, targetPosition, cloneMass, radius);
+
+  var thisClones = this.clones;
+  var thisUser = this;
+
+  clone.onMoveFindUserAndClones = function(){
+    var others = [];
+    others.push(thisUser);
+    for(var i=0; i<thisClones.length; i++){
+      if(thisClones[i].objectID !== clone.objectID){
+        others.push(thisClones[i]);
+      }
+    }
+    return others;
+  };
+  clone.onFusion = function(){
+    thisUser.addMass(clone.mass);
+    var index = thisClones.indexOf(clone);
+    if(index !== -1){
+      thisClones.splice(index, 1);
+    }
+  };
+  clone.onDestroy = function(){
+    var index = thisClones.indexOf(clone);
+    if(index !== -1){
+      thisClones.splice(index, 1);
+    }
+  }
+  clone.setCenter();
+  clone.moveClone();
+  this.clones.push(clone);
+};
+User.prototype.makeOnlyClonesClone = function(cloneID){
+  for(var i=0; i<this.clones.length; i++){
+    if(cloneID === this.clones[i].objectID){
+      var index = i;
+      break;
+    }
+  }
+  if(index !== undefined && index !== -1){
+    var thisClones = this.clones;
+    var thisUser = this;
+
+    var clonesCloneID = SUtil.generateRandomUniqueID('C', this.clones);
+    var clonesCloneMaxSpeed = SUtil.calcCloneSpeed(this.clones[index].maxSpeed);
+    var clonesTargetPosition = SUtil.calcCloneTargetPosition(this.clones[index].position, this.clones[index].direction, clonesCloneMaxSpeed);
+    var clonesCloneMass = this.clones[index].mass/2;
+    this.clones[index].divideMass();
+    var clonesRadius = SUtil.massToRadius(clonesCloneMass);
+    var clonesClone = new Clone(this.clones[index], this.objectID, clonesCloneID, clonesCloneMaxSpeed, clonesTargetPosition, clonesCloneMass, clonesRadius);
+
+    clonesClone.onMoveFindUserAndClones = function(){
+      var others = [];
+      others.push(thisUser);
+      for(var i=0; i<thisClones.length; i++){
+        if(thisClones[i].objectID !== clonesClone.objectID){
+          others.push(thisClones[i]);
+        }
+      }
+      return others;
+    };
+    clonesClone.onFusion = function(){
+      thisUser.addMass(clonesClone.mass);
+      var index = thisClones.indexOf(clonesClone);
+      if(index !== -1){
+        thisClones.splice(index, 1);
+      }
+    };
+    clonesClone.setCenter();
+    clonesClone.moveClone();
+    this.clones.push(clonesClone);
   }
 };
 User.prototype.clonesSetting = function(){

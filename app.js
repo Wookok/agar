@@ -31,9 +31,17 @@ GM.onUpdateUser = function(){
   var userDatas = GM.updateDataSettings();
   io.sockets.emit('updateUser', userDatas);
 }
+GM.onCreateVirus = function(viruses){
+  var virusData = [];
+  for(var i=0; i<viruses.length; i++){
+    virusData.push(GM.updateVirusDataSetting(viruses[i]));
+  }
+  console.log(virusData);
+  io.sockets.emit('createViruses', virusData);
+};
 GM.onCreateFoods = function(foods){
   var foodsDatas = [];
-  for(var i=0; i<Object.keys(foods).length; i++){
+  for(var i=0; i<foods.length; i++){
     foodsDatas.push(GM.updateFoodDataSetting(foods[i]));
   }
   io.sockets.emit('createFoods', foodsDatas);
@@ -67,10 +75,11 @@ io.on('connection', function(socket){
 
     var userDatas = GM.updateDataSettings();
     var foodsDatas = GM.updateFoodsDataSettings();
+    var virusesDatas = GM.updateVirusesDataSettings();
     console.log(userDatas);
 
     socket.emit('setSyncUser', userData);
-    socket.emit('resStartGame', userDatas, foodsDatas);
+    socket.emit('resStartGame', userDatas, foodsDatas, virusesDatas);
   });
 
   socket.on('reqMove', function(targetPosition){

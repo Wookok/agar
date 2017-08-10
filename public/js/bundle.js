@@ -6,6 +6,7 @@ var CManager = function(){
 	//all users
 	this.users = [];
 	this.foods = [];
+	this.viruses = [];
 };
 
 CManager.prototype = {
@@ -25,13 +26,28 @@ CManager.prototype = {
 	},
 	setFoods : function(foodsDatas){
 		for(var i =0; i<Object.keys(foodsDatas).length; i++){
-			foodsDatas[i].position = foodsDatas[i].position;
 			this.foods.push(foodsDatas[i]);
+		}
+	},
+	setViruses : function(virusesDatas){
+		for(var i=0; i<virusesDatas.length; i++){
+			this.viruses.push(virusesDatas[i]);
+		}
+	},
+	createViruses : function(virusesDatas){
+		for(var i=0; i<virusesDatas.length; i++){
+			this.viruses.push(virusesDatas[i]);
+		}
+	},
+	deleteVirus : function(virusID){
+		for(var i=0; i<this.viruses.length; i++){
+			if(virusID === this.viruses[i].objectID){
+				this.viruses.splice(i, 1);
+			}
 		}
 	},
 	createFoods : function(foodsDatas){
 		for(var i =0; i<Object.keys(foodsDatas).length; i++){
-			foodsDatas[i].position = foodsDatas[i].position;
 			this.foods.push(foodsDatas[i]);
 		}
 	},
@@ -108,13 +124,7 @@ module.exports={
   "GAME_STATE_START_SCENE" : 1,
   "GAME_STATE_GAME_START" : 2,
   "GAME_STATE_GAME_ON" : 3,
-  "GAME_STATE_GAME_END" : 4,
-
-  "FOOD_MIN_COUNT" : 300,
-  "FOOD_ADD_PER_USER" : 10,
-  "FOOD_MIN_RADIUS" : 20,
-  "FOOD_MAX_RADIUS" : 30,
-  "FOOD_RANGE_WITH_OTHERS" : 10
+  "GAME_STATE_GAME_END" : 4
 }
 
 },{}],4:[function(require,module,exports){
@@ -533,6 +543,7 @@ function drawGame(){
     drawScreen();
     drawGrid();
     drawFoods();
+    drawViruses();
     drawUser();
   }
 };
@@ -543,10 +554,10 @@ function setupSocket(){
     gameConfig.userID = user.objectID;
   });
   //change state game on
-  socket.on('resStartGame', function(userDatas, foodsDatas){
+  socket.on('resStartGame', function(userDatas, foodsDatas, virusesDatas){
     Manager.setUsers(userDatas);
     Manager.setFoods(foodsDatas);
-
+    Manager.setViruses(virusesDatas);
     console.log(Manager.users);
 
     canvasAddEvent();
@@ -556,6 +567,9 @@ function setupSocket(){
   });
   socket.on('userJoined', function(data){
     Manager.setUser(data);
+  });
+  socket.on('createViruses', function(virusesData){
+    Manager.createViruses(virusesData);
   });
   socket.on('createFoods', function(foodsDatas){
     Manager.createFoods(foodsDatas);
@@ -617,18 +631,32 @@ function drawUser(){
     }
   }
 };
+function drawViruses(){
+  for(var i=0; i<Manager.viruses.length; i++){
+    if(Manager.viruses[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.viruses[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
+        && Manager.viruses[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.viruses[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
+      ctx.beginPath();
+      ctx.fillStyle = '#ff00ff';
+      var centerX = util.worldXCoordToLocalX(Manager.viruses[i].position.x + Manager.viruses[i].size.width/2, gameConfig.userOffset.x);
+      var centerY = util.worldYCoordToLocalY(Manager.viruses[i].position.y + Manager.viruses[i].size.height/2, gameConfig.userOffset.y);
+      ctx.arc(centerX, centerY, Manager.viruses[i].size.width/2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.closePath();
+    }
+  }
+};
 function drawFoods(){
   for(var i=0; i<Manager.foods.length; i++){
     if(Manager.foods[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.foods[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
-      && Manager.foods[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.foods[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
-        ctx.beginPath();
-        ctx.fillStyle = Manager.foods[i].color;
-        var centerX = util.worldXCoordToLocalX(Manager.foods[i].position.x + Manager.foods[i].size.width/2, gameConfig.userOffset.x);
-        var centerY = util.worldYCoordToLocalY(Manager.foods[i].position.y + Manager.foods[i].size.height/2, gameConfig.userOffset.y);
-        ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.closePath();
-      }
+        && Manager.foods[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.foods[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
+      ctx.beginPath();
+      ctx.fillStyle = Manager.foods[i].color;
+      var centerX = util.worldXCoordToLocalX(Manager.foods[i].position.x + Manager.foods[i].size.width/2, gameConfig.userOffset.x);
+      var centerY = util.worldYCoordToLocalY(Manager.foods[i].position.y + Manager.foods[i].size.height/2, gameConfig.userOffset.y);
+      ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.closePath();
+    }
   }
 };
 function drawGrid(){
