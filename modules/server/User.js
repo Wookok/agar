@@ -28,7 +28,6 @@ User.prototype.addMass = function(mass){
   var radius = SUtil.massToRadius(this.mass);
   this.setSize(radius * 2, radius * 2);
   this.setCenter();
-  return this.size.width/2;
 };
 User.prototype.divideMass = function(){
   this.mass = this.mass/2;

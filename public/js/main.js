@@ -129,41 +129,28 @@ function setBaseSetting(){
   grid = new Image();
   grid.src = resource.GRID_SRC;
 };
-
 function setCanvasSize(){
-
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  if(gameConfig.userOffset){
-    var oldOffsetX = gameConfig.userOffset.x;
-    var oldOffsetY = gameConfig.userOffset.y;
-  }
-
   gameConfig.canvasSize = {width : window.innerWidth, height : window.innerHeight};
-  gameConfig.scaleFactor = setCanvasScale(gameConfig.canvasSize, gameConfig.CANVAS_MAX_LOCAL_SIZE);
-
-  if(gameConfig.userOffset){
-    var worldPosUser = {
-      position : util.localToWorldPosition(Manager.user.position,gameConfig.userOffset),
-      size : Manager.user.size
-    };
-    gameConfig.userOffset = util.calculateOffset(worldPosUser, gameConfig.canvasSize);
-
-    var revisionX = oldOffsetX - gameConfig.userOffset.x;
-    var revisionY = oldOffsetY - gameConfig.userOffset.y;
-
-    Manager.revisionAllObj(revisionX, revisionY);
+  setCanvasScale(gameConfig);
+};
+function setCanvasScale(gameConfig){
+  gameConfig.scaleX = 1;
+  gameConfig.scaleY = 1;
+  if(gameConfig.canvasSize.width >= gameConfig.CANVAS_MAX_LOCAL_SIZE.width){
+    gameConfig.scaleX =  (gameConfig.canvasSize.width / gameConfig.CANVAS_MAX_LOCAL_SIZE.width);
+  }
+  if(gameConfig.canvasSize.height >= gameConfig.CANVAS_MAX_LOCAL_SIZE.height){
+    gameConfig.scaleY = (gameConfig.canvasSize.height / gameConfig.CANVAS_MAX_LOCAL_SIZE.height);
+  }
+  if(gameConfig.scaleX > gameConfig.scaleY){
+    gameConfig.scaleFactor = gameConfig.scaleX;
+  }else{
+    gameConfig.scaleFactor = gameConfig.scaleY;
   }
 };
-function setCanvasScale(windowSize, canvasMaxLocalSize){
-  var scaleFactor = 1;
-  if(windowSize.width >= canvasMaxLocalSize.width || windowSize.height >= canvasMaxLocalSize.height){
-    var scaleFactor = (windowSize.width / canvasMaxLocalSize.width) > (windowSize.height / canvasMaxLocalSize.height) ?
-                  (windowSize.width / canvasMaxLocalSize.width) : (windowSize.height / canvasMaxLocalSize.height);
-  }
-  return scaleFactor;
-}
 function drawStartScene(){
   infoScene.classList.add('enable');
   infoScene.classList.remove('disable');
@@ -185,6 +172,7 @@ function drawGame(){
   if(gameConfig.userOffset){
     drawScreen();
     drawGrid();
+    drawBackground();
     drawFoods();
     drawViruses();
     drawUser();
@@ -214,10 +202,13 @@ function setupSocket(){
   socket.on('createViruses', function(virusesData){
     Manager.createViruses(virusesData);
   });
+  socket.on('deleteVirus', function(virusID){
+    Manager.deleteVirus(virusID);
+  });
   socket.on('createFoods', function(foodsDatas){
     Manager.createFoods(foodsDatas);
   });
-  socket.on('deleteFoodAndAddUserMass', function(foodID){
+  socket.on('deleteFood', function(foodID){
     Manager.deleteFood(foodID);
   });
   socket.on('updateUser', function(userDatas){
@@ -252,7 +243,7 @@ function drawUser(){
     var centerX = util.worldXCoordToLocalX(Manager.users[index].position.x + Manager.users[index].size.width/2, gameConfig.userOffset.x);
     var centerY = util.worldYCoordToLocalY(Manager.users[index].position.y + Manager.users[index].size.height/2, gameConfig.userOffset.y);
 
-    ctx.arc(centerX, centerY, Manager.users[index].size.width/2, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, Manager.users[index].size.width/2 * gameConfig.scaleFactor, 0, Math.PI * 2);
     ctx.stroke();
     ctx.fill();
     ctx.closePath();
@@ -267,7 +258,7 @@ function drawUser(){
       centerX = util.worldXCoordToLocalX(Manager.users[index].clones[i].position.x + Manager.users[index].clones[i].size.width/2, gameConfig.userOffset.x);
       centerY = util.worldYCoordToLocalY(Manager.users[index].clones[i].position.y + Manager.users[index].clones[i].size.height/2, gameConfig.userOffset.y);
 
-      ctx.arc(centerX, centerY, Manager.users[index].clones[i].size.width/2, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, Manager.users[index].clones[i].size.width/2 * gameConfig.scaleFactor, 0, Math.PI * 2);
       ctx.stroke();
       ctx.fill();
       ctx.closePath();
@@ -282,7 +273,7 @@ function drawViruses(){
       ctx.fillStyle = '#ff00ff';
       var centerX = util.worldXCoordToLocalX(Manager.viruses[i].position.x + Manager.viruses[i].size.width/2, gameConfig.userOffset.x);
       var centerY = util.worldYCoordToLocalY(Manager.viruses[i].position.y + Manager.viruses[i].size.height/2, gameConfig.userOffset.y);
-      ctx.arc(centerX, centerY, Manager.viruses[i].size.width/2, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, Manager.viruses[i].size.width/2 * gameConfig.scaleFactor, 0, Math.PI * 2);
       ctx.fill();
       ctx.closePath();
     }
@@ -296,26 +287,42 @@ function drawFoods(){
       ctx.fillStyle = Manager.foods[i].color;
       var centerX = util.worldXCoordToLocalX(Manager.foods[i].position.x + Manager.foods[i].size.width/2, gameConfig.userOffset.x);
       var centerY = util.worldYCoordToLocalY(Manager.foods[i].position.y + Manager.foods[i].size.height/2, gameConfig.userOffset.y);
-      ctx.arc(centerX, centerY, Manager.foods[i].size.width/2, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, Manager.foods[i].size.width/2 * gameConfig.scaleFactor, 0, Math.PI * 2);
       ctx.fill();
       ctx.closePath();
     }
   }
 };
 function drawGrid(){
-  //draw boundary
-  //draw grid
-  for(var i=0; i<gameConfig.CANVAS_MAX_SIZE.width * gameConfig.scaleFactor; i += resource.GRID_SIZE * gameConfig.scaleFactor){
-    if(util.isDrawX(i * gameConfig.scaleFactor, gameConfig)){
-      var x = util.worldXCoordToLocalX(i * gameConfig.scaleFactor, gameConfig.userOffset.x);
-      for(var j=0; j<gameConfig.CANVAS_MAX_SIZE.height * gameConfig.scaleFactor; j += resource.GRID_SIZE * gameConfig.scaleFactor){
-        if(util.isDrawY(j * gameConfig.scaleFactor, gameConfig)){
-          var y = util.worldYCoordToLocalY(j * gameConfig.scaleFactor, gameConfig.userOffset.y);
-          ctx.drawImage(grid, 0, 0, 48, 48, x, y, resource.GRID_IMG_SIZE * gameConfig.scaleFactor, resource.GRID_IMG_SIZE * gameConfig.scaleFactor);
-        }
-      }
-    }
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#0000ff';
+  ctx.globalAlpha = 0.15;
+  ctx.beginPath();
+ // - (gameConfig.CANVAS_MAX_LOCAL_SIZE.width * gameConfig.scaleFactor)/2
+ //  - (gameConfig.CANVAS_MAX_LOCAL_SIZE.height * gameConfig.scaleFactor)/2
+  for(var x = - gameConfig.userOffset.x; x<gameConfig.canvasSize.width; x += (gameConfig.CANVAS_MAX_LOCAL_SIZE.width * gameConfig.scaleFactor)/16){
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, gameConfig.canvasSize.height);
   }
+
+  for(var y = - gameConfig.userOffset.y; y<gameConfig.canvasSize.height; y += (gameConfig.CANVAS_MAX_LOCAL_SIZE.height * gameConfig.scaleFactor)/10){
+    ctx.moveTo(0, y);
+    ctx.lineTo(gameConfig.canvasSize.width, y);
+  }
+
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.closePath();
+};
+function drawBackground(){
+  ctx.fillStyle = "#11ff11";
+  ctx.globalAlpha = 0.65;
+  var posX = -gameConfig.userOffset.x;
+  var posY = -gameConfig.userOffset.y;
+  var sizeW = gameConfig.CANVAS_MAX_SIZE.width * gameConfig.scaleFactor - posX;
+  var sizeH = gameConfig.CANVAS_MAX_SIZE.height * gameConfig.scaleFactor- posY;
+  ctx.fillRect(posX, posY, sizeW, sizeH);
+  ctx.globalAlpha = 1;
 };
 function canvasAddEvent(){
   canvas.addEventListener('click', function(e){
@@ -335,24 +342,10 @@ function documentAddEvent(){
     }
   }, false);
 };
-function revisionUserPos(userData){
-  var oldOffsetX = gameConfig.userOffset.x;
-  var oldOffsetY = gameConfig.userOffset.y;
-
-  gameConfig.userOffset = util.calculateOffset(userData, gameConfig.canvasSize);
-  var revisionX = oldOffsetX - gameConfig.userOffset.x;
-  var revisionY = oldOffsetY - gameConfig.userOffset.y;
-  // Manager.revisionAllObj(revisionX, revisionY);
-  Manager.revisionUserPos(revisionX, revisionY);
-};
 function calcOffset(){
-  if(gameConfig.userID in Manager.users){
-    var offset = {
-      x : Manager.users[gameConfig.userID].position.x - gameConfig.canvasSize.width/2 + Manager.users[gameConfig.userID].size.width/2,
-      y : Manager.users[gameConfig.userID].position.y - gameConfig.canvasSize.height/2 + Manager.users[gameConfig.userID].size.height/2
-    }
-    return offset;
-  }
-  return false;
+  return {
+    x : Manager.users[gameConfig.userID].position.x + (Manager.users[gameConfig.userID].size.width * gameConfig.scaleFactor)/2 - gameConfig.canvasSize.width/(2 * gameConfig.scaleFactor),
+    y : Manager.users[gameConfig.userID].position.y + (Manager.users[gameConfig.userID].size.height * gameConfig.scaleFactor)/2- gameConfig.canvasSize.height/(2 * gameConfig.scaleFactor)
+  };
 };
 update();

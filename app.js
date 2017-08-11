@@ -39,6 +39,9 @@ GM.onCreateVirus = function(viruses){
   console.log(virusData);
   io.sockets.emit('createViruses', virusData);
 };
+GM.onDeleteVirus = function(virusID){
+  io.sockets.emit('deleteVirus', virusID);
+};
 GM.onCreateFoods = function(foods){
   var foodsDatas = [];
   for(var i=0; i<foods.length; i++){
@@ -47,7 +50,7 @@ GM.onCreateFoods = function(foods){
   io.sockets.emit('createFoods', foodsDatas);
 };
 GM.onDeleteFood = function(foodID){
-  io.sockets.emit('deleteFoodAndAddUserMass', foodID);
+  io.sockets.emit('deleteFood', foodID);
 };
 GM.onUserDestroy = function(userID){
   io.sockets.emit('userDestroy', userID);

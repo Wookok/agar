@@ -41,6 +41,7 @@ function GameManager(){
   this.virusesCount = serverConfig.VIRUS_MIN_COUNT;
 
   this.onCreateVirus = new Function();
+  this.onDeleteVirus = new Function();
   this.onCreateFoods = new Function();
   this.onDeleteFood = new Function();
   this.onUserFusion = new Function();
@@ -110,7 +111,7 @@ GameManager.prototype.updateGame = function(){
 function virusIntervalHandler(){
   //check to create virus
   if(this.viruses.length < Math.floor(this.virusesCount)){
-    this.createViruses(this.viruses.length - Math.floor(this.virusesCount));
+    this.createViruses(Math.floor(this.virusesCount) - this.viruses.length);
   }
 };
 function sendPacketIntervalHandler(){
@@ -190,11 +191,28 @@ GameManager.prototype.stopUser = function(user){
   user.stop();
 };
 
-GameManager.prototype.deleteFood = function(foodID, affectedID, userRadius){
+GameManager.prototype.deleteFood = function(foodID){
   for(var i=0; i<Object.keys(this.foods).length; i++){
     if(this.foods[i].objectID === foodID){
       this.foods.splice(i, 1);
-      this.onDeleteFood(foodID, affectedID, userRadius);
+      this.onDeleteFood(foodID);
+      return;
+    }
+  }
+};
+GameManager.prototype.checkVirus = function(virusID){
+  for(var i=0; i<this.viruses.length; i++){
+    if(this.viruses[i].objectID === virusID){
+      return true;
+    }
+  }
+  return false;
+};
+GameManager.prototype.deleteVirus = function(virusID){
+  for(var i=0; i<this.viruses.length; i++){
+    if(this.viruses[i].objectID === virusID){
+      this.viruses.splice(i, 1);
+      this.onDeleteVirus(virusID);
       return;
     }
   }
@@ -329,13 +347,11 @@ function updateIntervalHandler(){
     var collisionObjs = util.checkCircleCollision(this.staticTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
     if(collisionObjs.length > 0){
       for(var j=0; j<collisionObjs.length; j++){
-        console.log(collisionObjs);
         if(collisionObjs[j].id.substr(0, 1) === 'F'){
           this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_FOOD,'userID' : tempCollider.id, 'foodID' : collisionObjs[j].id, 'foodMass' : collisionObjs[j].mass });
         }else if(collisionObjs[j].id.substr(0, 1) === 'V'){
           this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_VIRUS,'userID' : tempCollider.id, 'virusID' : collisionObjs[j].id });
         }
-        console.log(this.affectedEles);
       }
     }
   }
@@ -418,11 +434,11 @@ function updateIntervalHandler(){
   for(var i=0; i<this.viruses.length; i++){
     this.staticEles.push(this.viruses[i].staticEle);
   }
-
   //put users data to tree
   this.userTree.pushAll(this.userEles);
   this.userTree.pushAll(this.userCloneEles);
   this.staticTree.pushAll(this.staticEles);
+
 };
 function affectIntervalHandler(){
   var index = this.affectedEles.length
@@ -436,15 +452,15 @@ function affectIntervalHandler(){
           }
         }
         if(cloneIndex !== undefined && cloneIndex !== -1){
-          var cloneRadius = this.users[this.affectedEles[index].userID].clones[cloneIndex].addMass(this.affectedEles[index].foodMass);
-          this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].cloneID, cloneRadius);
+          this.users[this.affectedEles[index].userID].clones[cloneIndex].addMass(this.affectedEles[index].foodMass);
+          this.deleteFood(this.affectedEles[index].foodID);
         }else{
           console.log('cant find clone Index');
         }
       }else{
-        var userRadius = this.users[this.affectedEles[index].userID].addMass(this.affectedEles[index].foodMass);
+        this.users[this.affectedEles[index].userID].addMass(this.affectedEles[index].foodMass);
         //userMass will be used for inform to client
-        this.deleteFood(this.affectedEles[index].foodID, this.affectedEles[index].userID, userRadius);
+        this.deleteFood(this.affectedEles[index].foodID);
       }
     }else if(this.affectedEles[index].type === serverConfig.COLLISION_WITH_VIRUS){
       if(this.affectedEles[index].cloneID){
@@ -455,15 +471,17 @@ function affectIntervalHandler(){
           }
         }
         if(cloneIndex !== undefined && cloneIndex !== -1){
-          if(SUtil.checkToCloneable(this.users[this.affectedEles[index].userID].clones[cloneIndex].mass)){
+          if(this.checkVirus(this.affectedEles[index].virusID) && SUtil.checkToCloneable(this.users[this.affectedEles[index].userID].clones[cloneIndex].mass)){
             this.users[this.affectedEles[index].userID].makeOnlyClonesClone(this.affectedEles[index].cloneID);
+            this.deleteVirus(this.affectedEles[index].virusID);
           }
         }else{
           console.log('cant find clone Index');
         }
       }else{
-        if(SUtil.checkToCloneable(this.users[this.affectedEles[index].userID].mass)){
+        if(this.checkVirus(this.affectedEles[index].virusID) && SUtil.checkToCloneable(this.users[this.affectedEles[index].userID].mass)){
           this.users[this.affectedEles[index].userID].makeOnlyUserClone();
+          this.deleteVirus(this.affectedEles[index].virusID);
         }
       }
     }else if(this.affectedEles[index].type === serverConfig.COLLISION_WITH_USER){
