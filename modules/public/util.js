@@ -90,14 +90,24 @@ exports.move = function(addPos){
   this.position.x += this.speed.x;
   this.position.y += this.speed.y;
 
-  this.center.x += this.speed.x;
-  this.center.y += this.speed.y;
+  this.setCenter();
+
   if(addPos && addPos.x && addPos.y){
     this.position.x += addPos.x;
     this.position.y += addPos.y;
 
     this.center.x += addPos.x;
     this.center.y += addPos.y;
+  }
+  if(this.center.x < this.size.width/2){
+    this.center.x = this.size.width/2;
+  }else if(this.center.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
+    this.center.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
+  }
+  if(this.center.y < this.size.height/2){
+    this.center.y = this.size.height/2;
+  }else if(this.center.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
+    this.center.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
   }
 };
 
@@ -212,3 +222,17 @@ exports.isExistsClone = function(userClones, updateClone){
   }
   return false;
 }
+exports.isXInCanvas = function(x, gameConfig){
+  var scaledX = x * gameConfig.scaleFactor;
+  if(scaledX>0 && scaledX<gameConfig.canvasSize.width){
+    return true;
+  }
+  return false;
+};
+exports.isYInCanvas = function(y, gameConfig){
+  var scaledY = y * gameConfig.scaleFactor;
+  if(scaledY>0 && scaledY<gameConfig.canvasSize.height){
+    return true;
+  }
+  return false;
+};

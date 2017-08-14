@@ -46,10 +46,10 @@ User.prototype.destroy = function(){
 User.prototype.makeClone = function(cloneID){
   if(SUtil.checkToCloneable(this.mass)){
     var cloneMaxSpeed = SUtil.calcCloneSpeed(this.maxSpeed);
-    var targetPosition = SUtil.calcCloneTargetPosition(this.position, this.direction, cloneMaxSpeed);
     var cloneMass = this.mass/2;
     this.divideMass();
     var radius = SUtil.massToRadius(cloneMass);
+    var targetPosition = SUtil.calcCloneTargetPosition(this.position, this.direction, cloneMaxSpeed, radius);
     var clone = new Clone(this, this.objectID, cloneID, cloneMaxSpeed, targetPosition, cloneMass, radius);
 
     var thisClones = this.clones;
@@ -85,10 +85,10 @@ User.prototype.makeClone = function(cloneID){
       if(SUtil.checkToCloneable(this.clones[i - 1].mass)){
         var clonesCloneID = SUtil.generateRandomUniqueID('C', this.clones);
         var clonesCloneMaxSpeed = SUtil.calcCloneSpeed(this.clones[i - 1].maxSpeed);
-        var clonesTargetPosition = SUtil.calcCloneTargetPosition(this.clones[i - 1].position, this.clones[i - 1].direction, clonesCloneMaxSpeed);
         var clonesCloneMass = this.clones[i - 1].mass/2;
         this.clones[i - 1].divideMass();
         var clonesRadius = SUtil.massToRadius(clonesCloneMass);
+        var clonesTargetPosition = SUtil.calcCloneTargetPosition(this.clones[i - 1].position, this.clones[i - 1].direction, clonesCloneMaxSpeed, clonesRadius);
         var clonesClone = new Clone(this.clones[i - 1], this.objectID, clonesCloneID, clonesCloneMaxSpeed, clonesTargetPosition, clonesCloneMass, clonesRadius);
 
         clonesClone.onMoveFindUserAndClones = function(){
@@ -119,10 +119,10 @@ User.prototype.makeClone = function(cloneID){
 User.prototype.makeOnlyUserClone = function(){
   var cloneID = SUtil.generateRandomUniqueID('C', this.clones);
   var cloneMaxSpeed = SUtil.calcCloneSpeed(this.maxSpeed);
-  var targetPosition = SUtil.calcCloneTargetPosition(this.position, this.direction, cloneMaxSpeed);
   var cloneMass = this.mass/2;
   this.divideMass();
   var radius = SUtil.massToRadius(cloneMass);
+  var targetPosition = SUtil.calcCloneTargetPosition(this.position, this.direction, cloneMaxSpeed, radius);
   var clone = new Clone(this, this.objectID, cloneID, cloneMaxSpeed, targetPosition, cloneMass, radius);
 
   var thisClones = this.clones;
@@ -168,10 +168,10 @@ User.prototype.makeOnlyClonesClone = function(cloneID){
 
     var clonesCloneID = SUtil.generateRandomUniqueID('C', this.clones);
     var clonesCloneMaxSpeed = SUtil.calcCloneSpeed(this.clones[index].maxSpeed);
-    var clonesTargetPosition = SUtil.calcCloneTargetPosition(this.clones[index].position, this.clones[index].direction, clonesCloneMaxSpeed);
     var clonesCloneMass = this.clones[index].mass/2;
     this.clones[index].divideMass();
     var clonesRadius = SUtil.massToRadius(clonesCloneMass);
+    var clonesTargetPosition = SUtil.calcCloneTargetPosition(this.clones[index].position, this.clones[index].direction, clonesCloneMaxSpeed, clonesRadius);
     var clonesClone = new Clone(this.clones[index], this.objectID, clonesCloneID, clonesCloneMaxSpeed, clonesTargetPosition, clonesCloneMass, clonesRadius);
 
     clonesClone.onMoveFindUserAndClones = function(){

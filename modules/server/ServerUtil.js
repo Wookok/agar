@@ -5,12 +5,26 @@ var serverConfig = require('./serverConfig.json');
 exports.calcCloneSpeed = function(maxSpeed){
   return maxSpeed * serverConfig.cloneSpeedRate;
 };
-exports.calcCloneTargetPosition = function(position, direction, maxSpeed){
+exports.calcCloneTargetPosition = function(position, direction, maxSpeed, radius){
   var unitSpeedX = Math.cos(direction * Math.PI/180) * maxSpeed;
   var unitSpeedY = Math.sin(direction * Math.PI/180) * maxSpeed;
+  var targetPosX = position.x + unitSpeedX * serverConfig.cloneChangeableTime * gameConfig.INTERVAL;
+  var targetPosY = position.y + unitSpeedY * serverConfig.cloneChangeableTime * gameConfig.INTERVAL;
+
+  if(targetPosX < radius){
+    targetPosX = radius;
+  }else if(targetPosX > gameConfig.CANVAS_MAX_SIZE.width - radius){
+    targetPosX = gameConfig.CANVAS_MAX_SIZE.width - radius;
+  }
+  if(targetPosY < radius){
+    targetPosY = radius;
+  }else if(targetPosY > gameConfig.CANVAS_MAX_SIZE.height - radius){
+    targetPosY = gameConfig.CANVAS_MAX_SIZE.height - radius;
+  }
+
   return {
-    x : position.x + unitSpeedX * serverConfig.cloneChangeableTime * gameConfig.INTERVAL,
-    y : position.y + unitSpeedY * serverConfig.cloneChangeableTime * gameConfig.INTERVAL
+    x : targetPosX,
+    y : targetPosY
   };
 };
 exports.massToRadius = function(mass){

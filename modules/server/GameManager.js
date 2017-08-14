@@ -80,8 +80,8 @@ GameManager.prototype.makeFood = function(count){
     var randomID = SUtil.generateRandomUniqueID('F', this.foods);
     var food = new Food(randomID);
     var randomRadius = SUtil.generateRandomRadius(serverConfig.FOOD_MIN_RADIUS, serverConfig.FOOD_MAX_RADIUS);
-    var randomPos = SUtil.generateRandomPos(this.staticTree, 0, 0, gameConfig.CANVAS_MAX_SIZE.width, gameConfig.CANVAS_MAX_SIZE.height,
-                                      randomRadius, gameConfig.FOOD_RANGE_WITH_OTHERS, randomID);
+    var randomPos = SUtil.generateRandomPos(this.staticTree, serverConfig.FOOD_MARGIN, serverConfig.FOOD_MARGIN, gameConfig.CANVAS_MAX_SIZE.width, gameConfig.CANVAS_MAX_SIZE.height,
+                                      randomRadius, serverConfig.FOOD_RANGE_WITH_OTHERS, randomID);
     var mass = SUtil.radiusToMass(randomRadius);
     var randomColor = SUtil.generateRandomColor();
 
