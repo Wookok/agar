@@ -1,11 +1,12 @@
 {
-  "baseMaxSpeed" : 10,
+  "minMaxSpeed" : 3,
+  "baseMaxSpeed" : 20,
   "baseRotateSpeed" : 30,
-  "baseMass" : 50,
+  "baseMass" : 20,
 
   "cloneChangeableTime" : 1,
-  "cloneSpeedRate" : 1.5,
-  "cloneFusionTime" : 3,
+  "cloneSpeedRate" : 1.2,
+  "cloneFusionTime" : 2.5,
   "cloneableMass" : 200,
 
   "COLLISION_WITH_FOOD" : 1,

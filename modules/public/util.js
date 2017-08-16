@@ -6,9 +6,6 @@ exports.rotate = function(){
   if(this.targetDirection === this.direction){
     if(this.currentState === gameConfig.OBJECT_STATE_MOVE){
       this.move();
-    }else if(this.currentState === gameConfig.OBJECT_STATE_MOVE_OFFSET){
-        //only use at client
-        this.moveOffset();
     }
   }
   //check rotate direction
@@ -63,16 +60,16 @@ exports.rotate = function(){
 
 //must use with bind or call method
 exports.move = function(addPos){
-  if(this.targetPosition.x < this.size.width/2){
-    this.targetPosition.x = this.size.width/2;
-  }else if(this.targetPosition.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
-    this.targetPosition.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
-  }
-  if(this.targetPosition.y < this.size.height/2){
-    this.targetPosition.y = this.size.height/2;
-  }else if(this.targetPosition.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
-    this.targetPosition.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
-  }
+  // if(this.targetPosition.x < this.size.width/2){
+  //   this.targetPosition.x = this.size.width/2;
+  // }else if(this.targetPosition.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
+  //   this.targetPosition.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
+  // }
+  // if(this.targetPosition.y < this.size.height/2){
+  //   this.targetPosition.y = this.size.height/2;
+  // }else if(this.targetPosition.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
+  //   this.targetPosition.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
+  // }
   //calculate dist with target
   var distX = this.targetPosition.x - this.center.x;
   var distY = this.targetPosition.y - this.center.y;
@@ -90,25 +87,33 @@ exports.move = function(addPos){
   this.position.x += this.speed.x;
   this.position.y += this.speed.y;
 
-  this.setCenter();
-
   if(addPos && addPos.x && addPos.y){
     this.position.x += addPos.x;
     this.position.y += addPos.y;
+  }
 
-    this.center.x += addPos.x;
-    this.center.y += addPos.y;
+  if(this.position.x < 0){
+    this.position.x = 0;
+  }else if(this.position.x > gameConfig.CANVAS_MAX_SIZE.width - this.size.width){
+    this.position.x = gameConfig.CANVAS_MAX_SIZE.width - this.size.width;
   }
-  if(this.center.x < this.size.width/2){
-    this.center.x = this.size.width/2;
-  }else if(this.center.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
-    this.center.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
+  if(this.position.y < 0){
+    this.position.y = 0;
+  }else if(this.position.y > gameConfig.CANVAS_MAX_SIZE.height - this.size.height){
+    this.position.y = gameConfig.CANVAS_MAX_SIZE.height - this.size.height;
   }
-  if(this.center.y < this.size.height/2){
-    this.center.y = this.size.height/2;
-  }else if(this.center.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
-    this.center.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
-  }
+  // if(this.center.x < this.size.width/2){
+  //   this.center.x = this.size.width/2;
+  // }else if(this.center.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
+  //   this.center.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
+  // }
+  // if(this.center.y < this.size.height/2){
+  //   this.center.y = this.size.height/2;
+  // }else if(this.center.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
+  //   this.center.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
+  // }
+
+  this.setCenter();
 };
 
 //must use with bind or call method

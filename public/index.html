@@ -3,27 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>.io</title>
-  <style>
-    html, body, canvas {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-    .disable{
-      display: none;
-    }
-    .enable{
-      display: block;
-    }
-  </style>
+  <title>Agar.io</title>
+  <link rel="stylesheet" type="text/css" href="/css/main.css">
 </head>
 <body>
-  <div id="infoScene" class="enable">
-    <h1>Info Scene</h1>
-    <input type="text" placeholder="Enter Your Nickname" id="name" />
-    <button id="startButton">start button</button>
+  <div id="introScene" class="enable">
+    <div class="outer">
+      <div class="inner">
+        <div class="centered">
+          <div class="hudIntro">
+            <h1>Agar.io</h1>
+            <br>
+            <input type="text" placeholder="Enter Your Nickname" id="name" />
+            <br>
+            <button id="startButton">start button</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="gameScene" class="disable">
     <canvas id="canvas" height="1000" width="1000"></canvas>

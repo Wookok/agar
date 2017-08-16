@@ -1,0 +1,100 @@
+* {
+  box-sizing: border-box;
+  user-select: none;
+}
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Open Sans', sans-serif;
+  display: block;
+}
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+#introScene {
+  width: 70%;
+  height: 70%;
+  margin: 5em auto;
+  background: black;
+  border-radius: 10px;
+}
+.outer {
+  display: table;
+  width: 100%;
+  height: 100%;
+}
+.inner {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+.centered {
+  position: relative;
+  display: inline-block;
+
+  width: 50%;
+  padding: 1em;
+}
+.hudIntro h1{
+    font-family: 'Hammersmith One', sans-serif;
+    position: relative;
+    display: inline-block;
+    font-size: 36px;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+    color : white;
+    margin : 1em;
+}
+.hudIntro input{
+  margin : 1em;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 40px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  color: black;
+  border: 0;
+  padding: 10px 15px;
+  line-height: 20px;
+  font-size: 13px;
+  border-radius: 4px 4px 4px 4px;
+}
+.hudIntro button{
+  margin : 1em;
+  height: 2.5em;
+  width: 50%;
+  border-radius: 5px;
+  color: white;
+  background: #3b3b8b;
+  font-size: 1em;
+  font-family: 'Hammersmith One', sans-serif;
+  font-weight: bold;
+}
+.hudIntro button:hover{
+  background: #585894;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.disable{
+  height: 100%;
+  width: 100%;
+  display: none;
+}
+.enable{
+  height: 100%;
+  width: 100%
+  display: block;
+}

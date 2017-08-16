@@ -33,7 +33,11 @@ Clone.prototype.addMass = function(mass){
   var radius = SUtil.massToRadius(this.mass);
   this.setSize(radius * 2, radius * 2);
   this.setCenter();
-}
+  if(this.checkChangeAble()){
+    var maxSpeed = SUtil.massToSpeed(this.mass);
+    this.setMaxSpeed(maxSpeed);
+  }
+};
 Clone.prototype.moveClone = function(){
   this.setSpeed();
   this.position.x += this.speed.x;
@@ -115,6 +119,10 @@ Clone.prototype.divideMass = function(){
   var radius = SUtil.massToRadius(this.mass);
   this.setSize(radius * 2, radius * 2);
   this.setCenter();
+  if(this.checkChangeAble()){
+    var maxSpeed = SUtil.massToSpeed(this.mass);
+    this.setMaxSpeed(maxSpeed);
+  }
 };
 module.exports = Clone;
 // Clone.prototype.setTargetPositionAndInitMaxSpeed = function(targetPosition, maxSpeed){

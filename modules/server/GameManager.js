@@ -80,7 +80,7 @@ GameManager.prototype.makeFood = function(count){
     var randomID = SUtil.generateRandomUniqueID('F', this.foods);
     var food = new Food(randomID);
     var randomRadius = SUtil.generateRandomRadius(serverConfig.FOOD_MIN_RADIUS, serverConfig.FOOD_MAX_RADIUS);
-    var randomPos = SUtil.generateRandomPos(this.staticTree, serverConfig.FOOD_MARGIN, serverConfig.FOOD_MARGIN, gameConfig.CANVAS_MAX_SIZE.width, gameConfig.CANVAS_MAX_SIZE.height,
+    var randomPos = SUtil.generateRandomPos(this.staticTree, serverConfig.FOOD_MARGIN, serverConfig.FOOD_MARGIN, gameConfig.CANVAS_MAX_SIZE.width - serverConfig.FOOD_MARGIN, gameConfig.CANVAS_MAX_SIZE.height - serverConfig.FOOD_MARGIN,
                                       randomRadius, serverConfig.FOOD_RANGE_WITH_OTHERS, randomID);
     var mass = SUtil.radiusToMass(randomRadius);
     var randomColor = SUtil.generateRandomColor();
@@ -438,7 +438,6 @@ function updateIntervalHandler(){
   this.userTree.pushAll(this.userEles);
   this.userTree.pushAll(this.userCloneEles);
   this.staticTree.pushAll(this.staticEles);
-
 };
 function affectIntervalHandler(){
   var index = this.affectedEles.length

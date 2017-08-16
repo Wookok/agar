@@ -22,18 +22,24 @@ User.prototype.setMass = function(mass){
   var radius = SUtil.massToRadius(this.mass);
   this.setSize(radius * 2, radius * 2);
   this.setCenter();
+  var maxSpeed = SUtil.massToSpeed(this.mass);
+  this.setMaxSpeed(maxSpeed);
 };
 User.prototype.addMass = function(mass){
   this.mass += mass;
   var radius = SUtil.massToRadius(this.mass);
   this.setSize(radius * 2, radius * 2);
   this.setCenter();
+  var maxSpeed = SUtil.massToSpeed(this.mass);
+  this.setMaxSpeed(maxSpeed);
 };
 User.prototype.divideMass = function(){
   this.mass = this.mass/2;
   var radius = SUtil.massToRadius(this.mass);
   this.setSize(radius * 2, radius * 2);
   this.setCenter();
+  var maxSpeed = SUtil.massToSpeed(this.mass);
+  this.setMaxSpeed(maxSpeed);
 };
 User.prototype.destroy = function(){
   if(this.clones.length === 0){

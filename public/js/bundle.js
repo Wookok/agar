@@ -108,15 +108,13 @@ module.exports = User;
 module.exports={
   "INTERVAL" : 30,
 
-  "CANVAS_MAX_SIZE" : {"width" : 3200 , "height" : 3200},
+  "CANVAS_MAX_SIZE" : {"width" : 6400 , "height" : 6400},
   "CANVAS_MAX_LOCAL_SIZE" : {"width" : 1600, "height" : 1000},
 
   "OBJECT_STATE_IDLE" : 0,
   "OBJECT_STATE_MOVE" : 1,
 
   "FPS" : 60,
-  "PLUS_SIZE_WIDTH" : 500,
-  "PLUS_SIZE_HEIGHT" : 500,
 
   "GAME_STATE_LOAD" : 0,
   "GAME_STATE_START_SCENE" : 1,
@@ -124,8 +122,8 @@ module.exports={
   "GAME_STATE_GAME_ON" : 3,
   "GAME_STATE_GAME_END" : 4,
 
-  "SIGHT_FACTOR" : 100,
-  "MAX_SIGHT" : 5
+  "SIGHT_FACTOR" : 150,
+  "MAX_SIGHT" : 3
 }
 
 },{}],4:[function(require,module,exports){
@@ -142,9 +140,6 @@ exports.rotate = function(){
   if(this.targetDirection === this.direction){
     if(this.currentState === gameConfig.OBJECT_STATE_MOVE){
       this.move();
-    }else if(this.currentState === gameConfig.OBJECT_STATE_MOVE_OFFSET){
-        //only use at client
-        this.moveOffset();
     }
   }
   //check rotate direction
@@ -199,16 +194,16 @@ exports.rotate = function(){
 
 //must use with bind or call method
 exports.move = function(addPos){
-  if(this.targetPosition.x < this.size.width/2){
-    this.targetPosition.x = this.size.width/2;
-  }else if(this.targetPosition.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
-    this.targetPosition.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
-  }
-  if(this.targetPosition.y < this.size.height/2){
-    this.targetPosition.y = this.size.height/2;
-  }else if(this.targetPosition.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
-    this.targetPosition.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
-  }
+  // if(this.targetPosition.x < this.size.width/2){
+  //   this.targetPosition.x = this.size.width/2;
+  // }else if(this.targetPosition.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
+  //   this.targetPosition.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
+  // }
+  // if(this.targetPosition.y < this.size.height/2){
+  //   this.targetPosition.y = this.size.height/2;
+  // }else if(this.targetPosition.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
+  //   this.targetPosition.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
+  // }
   //calculate dist with target
   var distX = this.targetPosition.x - this.center.x;
   var distY = this.targetPosition.y - this.center.y;
@@ -226,25 +221,33 @@ exports.move = function(addPos){
   this.position.x += this.speed.x;
   this.position.y += this.speed.y;
 
-  this.setCenter();
-
   if(addPos && addPos.x && addPos.y){
     this.position.x += addPos.x;
     this.position.y += addPos.y;
+  }
 
-    this.center.x += addPos.x;
-    this.center.y += addPos.y;
+  if(this.position.x < 0){
+    this.position.x = 0;
+  }else if(this.position.x > gameConfig.CANVAS_MAX_SIZE.width - this.size.width){
+    this.position.x = gameConfig.CANVAS_MAX_SIZE.width - this.size.width;
   }
-  if(this.center.x < this.size.width/2){
-    this.center.x = this.size.width/2;
-  }else if(this.center.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
-    this.center.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
+  if(this.position.y < 0){
+    this.position.y = 0;
+  }else if(this.position.y > gameConfig.CANVAS_MAX_SIZE.height - this.size.height){
+    this.position.y = gameConfig.CANVAS_MAX_SIZE.height - this.size.height;
   }
-  if(this.center.y < this.size.height/2){
-    this.center.y = this.size.height/2;
-  }else if(this.center.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
-    this.center.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
-  }
+  // if(this.center.x < this.size.width/2){
+  //   this.center.x = this.size.width/2;
+  // }else if(this.center.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
+  //   this.center.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
+  // }
+  // if(this.center.y < this.size.height/2){
+  //   this.center.y = this.size.height/2;
+  // }else if(this.center.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
+  //   this.center.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
+  // }
+
+  this.setCenter();
 };
 
 //must use with bind or call method
@@ -383,7 +386,7 @@ var gameConfig = require('../../modules/public/gameConfig.json');
 var socket;
 
 // document elements
-var infoScene, gameScene, standingScene;
+var introScene, gameScene, standingScene;
 var startButton;
 
 var canvas, ctx, scaleFactor;
@@ -487,7 +490,7 @@ function setBaseSetting(){
   canvas = document.getElementById('canvas');
   ctx = canvas.getContext('2d');
 
-  infoScene = document.getElementById('infoScene');
+  introScene = document.getElementById('introScene');
   gameScene = document.getElementById('gameScene');
   standingScene = document.getElementById('standingScene');
   startButton = document.getElementById('startButton');
@@ -563,8 +566,8 @@ function setCanvasScale(){
   }
 };
 function drawStartScene(){
-  infoScene.classList.add('enable');
-  infoScene.classList.remove('disable');
+  introScene.classList.add('enable');
+  introScene.classList.remove('disable');
   gameScene.classList.add('disable');
   gameScene.classList.remove('enable');
   standingScene.classList.add('disable');
@@ -572,8 +575,8 @@ function drawStartScene(){
 };
 
 function drawGame(){
-  infoScene.classList.add('disable');
-  infoScene.classList.remove('enable');
+  introScene.classList.add('disable');
+  introScene.classList.remove('enable');
   gameScene.classList.add('enable');
   gameScene.classList.remove('disable');
   standingScene.classList.add('disable');
@@ -681,26 +684,14 @@ function drawUser(){
 };
 function drawViruses(){
   for(var i=0; i<Manager.viruses.length; i++){
-    // if(Manager.viruses[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.viruses[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
-    //     && Manager.viruses[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.viruses[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
-    //   // ctx.beginPath();
-      // ctx.fillStyle = '#ff00ff';
-      var posX = util.worldXCoordToLocalX(Manager.viruses[i].position.x, gameConfig.userOffset.x);
-      var posY = util.worldYCoordToLocalY(Manager.viruses[i].position.y, gameConfig.userOffset.y);
+    var posX = util.worldXCoordToLocalX(Manager.viruses[i].position.x, gameConfig.userOffset.x);
+    var posY = util.worldYCoordToLocalY(Manager.viruses[i].position.y, gameConfig.userOffset.y);
 
-      // var centerX = util.worldXCoordToLocalX(Manager.viruses[i].position.x + Manager.viruses[i].size.width/2, gameConfig.userOffset.x);
-      // var centerY = util.worldYCoordToLocalY(Manager.viruses[i].position.y + Manager.viruses[i].size.height/2, gameConfig.userOffset.y);
-      ctx.drawImage(imgVirus, posX * gameConfig.scaleFactor, posY * gameConfig.scaleFactor, Manager.viruses[i].size.width/2 * gameConfig.scaleFactor, Manager.viruses[i].size.height/2 * gameConfig.scaleFactor);
-      // ctx.arc(centerX * gameConfig.scaleFactor, centerY * gameConfig.scaleFactor, Manager.viruses[i].size.width/2 * gameConfig.scaleFactor, 0, Math.PI * 2);
-      // ctx.fill();
-      // ctx.closePath();
-    // }
+    ctx.drawImage(imgVirus, posX * gameConfig.scaleFactor, posY * gameConfig.scaleFactor, Manager.viruses[i].size.width * gameConfig.scaleFactor, Manager.viruses[i].size.height * gameConfig.scaleFactor);
   }
 };
 function drawFoods(){
   for(var i=0; i<Manager.foods.length; i++){
-    // if(Manager.foods[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.foods[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
-    //     && Manager.foods[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.foods[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
     ctx.beginPath();
     ctx.fillStyle = Manager.foods[i].color;
     var centerX = util.worldXCoordToLocalX(Manager.foods[i].position.x + Manager.foods[i].size.width/2, gameConfig.userOffset.x);
@@ -746,10 +737,10 @@ function drawGrid(){
 };
 function canvasAddEvent(){
   canvas.addEventListener('click', function(e){
-    var targetPosition ={
+    var targetPosition = {
       x : e.clientX / gameConfig.scaleFactor,
       y : e.clientY / gameConfig.scaleFactor
-    }
+    };
     var worldTargetPosition = util.localToWorldPosition(targetPosition, gameConfig.userOffset);
     socket.emit('reqMove', worldTargetPosition);
   }, false);
@@ -763,8 +754,8 @@ function documentAddEvent(){
   }, false);
 };
 function calcOffset(){
-  var userCenterX = Manager.users[gameConfig.userID].position.x + Manager.users[gameConfig.userID].size.width * gameConfig.scaleFactor/2;
-  var userCenterY = Manager.users[gameConfig.userID].position.y + Manager.users[gameConfig.userID].size.height * gameConfig.scaleFactor/2;
+  var userCenterX = Manager.users[gameConfig.userID].position.x + Manager.users[gameConfig.userID].size.width;
+  var userCenterY = Manager.users[gameConfig.userID].position.y + Manager.users[gameConfig.userID].size.height;
   var clonesCenterX = 0;
   var clonesCenterY = 0;
   var cloneCount = Manager.users[gameConfig.userID].clones.length;

@@ -6,7 +6,7 @@ function Virus(objectID, position, radius){
 
   this.setSize(radius * 2, radius * 2);
   this.setPosition(position.x, position.y);
-
+  
   this.staticEle = {
     id : this.objectID,
     x : this.position.x,

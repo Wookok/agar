@@ -1,15 +1,13 @@
 {
   "INTERVAL" : 30,
 
-  "CANVAS_MAX_SIZE" : {"width" : 3200 , "height" : 3200},
+  "CANVAS_MAX_SIZE" : {"width" : 6400 , "height" : 6400},
   "CANVAS_MAX_LOCAL_SIZE" : {"width" : 1600, "height" : 1000},
 
   "OBJECT_STATE_IDLE" : 0,
   "OBJECT_STATE_MOVE" : 1,
 
   "FPS" : 60,
-  "PLUS_SIZE_WIDTH" : 500,
-  "PLUS_SIZE_HEIGHT" : 500,
 
   "GAME_STATE_LOAD" : 0,
   "GAME_STATE_START_SCENE" : 1,
@@ -17,6 +15,6 @@
   "GAME_STATE_GAME_ON" : 3,
   "GAME_STATE_GAME_END" : 4,
 
-  "SIGHT_FACTOR" : 100,
-  "MAX_SIGHT" : 5
+  "SIGHT_FACTOR" : 150,
+  "MAX_SIGHT" : 3
 }

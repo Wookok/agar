@@ -44,7 +44,7 @@ LivingEntity.prototype.changeState = function(newState){
       this.updateFunction = this.idle;
       break;
     case gameConfig.OBJECT_STATE_MOVE :
-      this.updateFunction = this.rotate.bind(this);
+      this.updateFunction = this.move.bind(this);
       break;
     }
   this.update();
@@ -58,6 +58,7 @@ LivingEntity.prototype.rotate = function(){
 };
 //move after rotate
 LivingEntity.prototype.move = function(){
+  this.direction = this.targetDirection;
   util.move.call(this);
 };
 LivingEntity.prototype.idle = function(){

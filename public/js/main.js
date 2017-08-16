@@ -7,7 +7,7 @@ var gameConfig = require('../../modules/public/gameConfig.json');
 var socket;
 
 // document elements
-var infoScene, gameScene, standingScene;
+var introScene, gameScene, standingScene;
 var startButton;
 
 var canvas, ctx, scaleFactor;
@@ -111,7 +111,7 @@ function setBaseSetting(){
   canvas = document.getElementById('canvas');
   ctx = canvas.getContext('2d');
 
-  infoScene = document.getElementById('infoScene');
+  introScene = document.getElementById('introScene');
   gameScene = document.getElementById('gameScene');
   standingScene = document.getElementById('standingScene');
   startButton = document.getElementById('startButton');
@@ -187,8 +187,8 @@ function setCanvasScale(){
   }
 };
 function drawStartScene(){
-  infoScene.classList.add('enable');
-  infoScene.classList.remove('disable');
+  introScene.classList.add('enable');
+  introScene.classList.remove('disable');
   gameScene.classList.add('disable');
   gameScene.classList.remove('enable');
   standingScene.classList.add('disable');
@@ -196,8 +196,8 @@ function drawStartScene(){
 };
 
 function drawGame(){
-  infoScene.classList.add('disable');
-  infoScene.classList.remove('enable');
+  introScene.classList.add('disable');
+  introScene.classList.remove('enable');
   gameScene.classList.add('enable');
   gameScene.classList.remove('disable');
   standingScene.classList.add('disable');
@@ -305,26 +305,14 @@ function drawUser(){
 };
 function drawViruses(){
   for(var i=0; i<Manager.viruses.length; i++){
-    // if(Manager.viruses[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.viruses[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
-    //     && Manager.viruses[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.viruses[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
-    //   // ctx.beginPath();
-      // ctx.fillStyle = '#ff00ff';
-      var posX = util.worldXCoordToLocalX(Manager.viruses[i].position.x, gameConfig.userOffset.x);
-      var posY = util.worldYCoordToLocalY(Manager.viruses[i].position.y, gameConfig.userOffset.y);
+    var posX = util.worldXCoordToLocalX(Manager.viruses[i].position.x, gameConfig.userOffset.x);
+    var posY = util.worldYCoordToLocalY(Manager.viruses[i].position.y, gameConfig.userOffset.y);
 
-      // var centerX = util.worldXCoordToLocalX(Manager.viruses[i].position.x + Manager.viruses[i].size.width/2, gameConfig.userOffset.x);
-      // var centerY = util.worldYCoordToLocalY(Manager.viruses[i].position.y + Manager.viruses[i].size.height/2, gameConfig.userOffset.y);
-      ctx.drawImage(imgVirus, posX * gameConfig.scaleFactor, posY * gameConfig.scaleFactor, Manager.viruses[i].size.width/2 * gameConfig.scaleFactor, Manager.viruses[i].size.height/2 * gameConfig.scaleFactor);
-      // ctx.arc(centerX * gameConfig.scaleFactor, centerY * gameConfig.scaleFactor, Manager.viruses[i].size.width/2 * gameConfig.scaleFactor, 0, Math.PI * 2);
-      // ctx.fill();
-      // ctx.closePath();
-    // }
+    ctx.drawImage(imgVirus, posX * gameConfig.scaleFactor, posY * gameConfig.scaleFactor, Manager.viruses[i].size.width * gameConfig.scaleFactor, Manager.viruses[i].size.height * gameConfig.scaleFactor);
   }
 };
 function drawFoods(){
   for(var i=0; i<Manager.foods.length; i++){
-    // if(Manager.foods[i].position.x > -gameConfig.PLUS_SIZE_WIDTH && Manager.foods[i].position.x < canvas.width + gameConfig.PLUS_SIZE_WIDTH
-    //     && Manager.foods[i].position.y > -gameConfig.PLUS_SIZE_HEIGHT && Manager.foods[i].position.y < canvas.height + gameConfig.PLUS_SIZE_HEIGHT){
     ctx.beginPath();
     ctx.fillStyle = Manager.foods[i].color;
     var centerX = util.worldXCoordToLocalX(Manager.foods[i].position.x + Manager.foods[i].size.width/2, gameConfig.userOffset.x);
@@ -370,10 +358,10 @@ function drawGrid(){
 };
 function canvasAddEvent(){
   canvas.addEventListener('click', function(e){
-    var targetPosition ={
+    var targetPosition = {
       x : e.clientX / gameConfig.scaleFactor,
       y : e.clientY / gameConfig.scaleFactor
-    }
+    };
     var worldTargetPosition = util.localToWorldPosition(targetPosition, gameConfig.userOffset);
     socket.emit('reqMove', worldTargetPosition);
   }, false);
@@ -387,8 +375,8 @@ function documentAddEvent(){
   }, false);
 };
 function calcOffset(){
-  var userCenterX = Manager.users[gameConfig.userID].position.x + Manager.users[gameConfig.userID].size.width * gameConfig.scaleFactor/2;
-  var userCenterY = Manager.users[gameConfig.userID].position.y + Manager.users[gameConfig.userID].size.height * gameConfig.scaleFactor/2;
+  var userCenterX = Manager.users[gameConfig.userID].position.x + Manager.users[gameConfig.userID].size.width;
+  var userCenterY = Manager.users[gameConfig.userID].position.y + Manager.users[gameConfig.userID].size.height;
   var clonesCenterX = 0;
   var clonesCenterY = 0;
   var cloneCount = Manager.users[gameConfig.userID].clones.length;

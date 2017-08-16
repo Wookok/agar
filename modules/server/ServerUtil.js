@@ -27,6 +27,9 @@ exports.calcCloneTargetPosition = function(position, direction, maxSpeed, radius
     y : targetPosY
   };
 };
+exports.massToSpeed = function(mass){
+  return serverConfig.minMaxSpeed + serverConfig.baseMaxSpeed / Math.sqrt(mass);
+};
 exports.massToRadius = function(mass){
   return 4 + Math.sqrt(mass) * 6;
 };
