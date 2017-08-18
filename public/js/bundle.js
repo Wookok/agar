@@ -81,11 +81,13 @@ CManager.prototype = {
 	updateUserData : function(userData){
 		this.users[userData.objectID].position = userData.position;
 		this.users[userData.objectID].size = userData.size;
+		this.users[userData.objectID].mass = userData.mass;
 		this.users[userData.objectID].clones = [];
 		for(var i=0; i<Object.keys(userData.clones).length; i++){
 			this.users[userData.objectID].clones.push({
 				objectID : userData.clones[i].objectID,
 				position : userData.clones[i].position,
+				mass : userData.clones[i].mass,
 				size : userData.clones[i].size
 			});
 		}
@@ -97,8 +99,10 @@ module.exports = CManager;
 },{"../public/util.js":5,"./CUser.js":2}],2:[function(require,module,exports){
 var User = function(userData){
   this.objectID = userData.objectID;
+  this.name = userData.name;
   this.position = userData.position;
   this.size = userData.size;
+  this.mass = userData.mass;
   this.clones = [];
 }
 
@@ -191,19 +195,13 @@ exports.rotate = function(){
     this.direction += 360;
   }
 };
-
+exports.checkNameIsValid = function(name){
+  name.replace(/(<([^>]+)>)/ig, '').substring(0,25);
+  var expression = /^\w*$/;
+  return expression.exec(name);
+};
 //must use with bind or call method
 exports.move = function(addPos){
-  // if(this.targetPosition.x < this.size.width/2){
-  //   this.targetPosition.x = this.size.width/2;
-  // }else if(this.targetPosition.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
-  //   this.targetPosition.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
-  // }
-  // if(this.targetPosition.y < this.size.height/2){
-  //   this.targetPosition.y = this.size.height/2;
-  // }else if(this.targetPosition.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
-  //   this.targetPosition.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
-  // }
   //calculate dist with target
   var distX = this.targetPosition.x - this.center.x;
   var distY = this.targetPosition.y - this.center.y;
@@ -388,6 +386,7 @@ var socket;
 // document elements
 var introScene, gameScene, standingScene;
 var startButton;
+var board;
 
 var canvas, ctx, scaleFactor;
 
@@ -459,7 +458,14 @@ function load(){
   setCanvasSize();
   //event handle config
   startButton.onclick = function(){
-    changeState(gameConfig.GAME_STATE_GAME_START);
+    var userName = nameInput.value;
+    if(util.checkNameIsValid(userName)){
+      gameConfig.userName = userName;
+      console.log(gameConfig.userName);
+      changeState(gameConfig.GAME_STATE_GAME_START);
+    }else{
+      alert('Name is not valid');
+    }
   };
   window.onresize = function(){
     setCanvasSize();
@@ -474,7 +480,7 @@ function standby(){
 //setup socket here!!! now changestates in socket response functions
 function start(){
   setupSocket();
-  socket.emit('reqStartGame');
+  socket.emit('reqStartGame', gameConfig.userName);
 };
 //game play on
 function game(){
@@ -494,6 +500,8 @@ function setBaseSetting(){
   gameScene = document.getElementById('gameScene');
   standingScene = document.getElementById('standingScene');
   startButton = document.getElementById('startButton');
+  board = document.getElementById('board');
+  nameInput = document.getElementById('name');
 
   // inner Modules
   util = require('../../modules/public/util.js');
@@ -591,13 +599,64 @@ function drawGame(){
     drawGrid();
     drawBackground();
     drawFoods();
-    drawViruses();
     drawUser();
+    drawViruses();
+
+    drawBoard();
+  }
+};
+function drawBoard(){
+  var usersMass = [];
+  var rank = [];
+  for(var index in Manager.users){
+    var totalMass = Manager.users[index].mass;
+    for(var i=0; i<Manager.users[index].clones.length; i++){
+      totalMass += Manager.users[index].clones[i].mass;
+    }
+    usersMass.push({name : Manager.users[index].name, mass : totalMass});
+  }
+  for(var i=0; i<usersMass.length; i++){
+    if(rank.length === 0){
+      rank.push(usersMass[i]);
+    }else{
+      var insertIndex = 0;
+      for(var j=0; j<rank.length; j++){
+        if(rank[j].mass < usersMass[i].mass){
+          insertIndex = j;
+          break;
+        }
+        insertIndex ++;
+      }
+      rank.splice(insertIndex, 0, usersMass[i]);
+    }
+  }
+  var nodesLength = board.childNodes.length;
+  for(var i=0; i < nodesLength; i++){
+    board.removeChild(board.childNodes[0]);
+  }
+  var x = document.createElement("H2");
+  var t = document.createTextNode('Rank');
+  x.appendChild(t);
+  board.appendChild(x);
+
+  if(rank.length > 3){
+    var length = 3;
+  }else{
+    length = rank.length;
+  }
+  for(var i=0; i<length; i++){
+    var x = document.createElement("P");
+    var t = document.createTextNode(rank[i].name + ' : ' + Math.floor(rank[i].mass));
+    x.appendChild(t);
+    board.appendChild(x);
   }
 };
 // socket connect and server response configs
 function setupSocket(){
   socket = io();
+  socket.on('disconnect', function(){
+    changeState(gameConfig.GAME_STATE_END);
+  });
   socket.on('setSyncUser', function(user){
     gameConfig.userID = user.objectID;
   });
@@ -640,6 +699,9 @@ function setupSocket(){
   socket.on('userLeave', function(objID){
     Manager.kickUser(objID);
   });
+  socket.on('rename', function(){
+    changeState(gameConfig.GAME_STATE_START_SCENE);
+  });
 };
 
 //draw
@@ -655,6 +717,7 @@ function drawUser(){
     ctx.beginPath();
     ctx.fillStyle = '#aaaaaa';
     ctx.strokeStyle = "#000000";
+    ctx.font = "30px Arial";
     ctx.lineWidth = 5;
 
     var centerX = util.worldXCoordToLocalX(Manager.users[index].position.x + Manager.users[index].size.width/2, gameConfig.userOffset.x);
@@ -663,6 +726,8 @@ function drawUser(){
     ctx.arc(centerX * gameConfig.scaleFactor, centerY * gameConfig.scaleFactor, Manager.users[index].size.width/2 * gameConfig.scaleFactor, 0, 2 * Math.PI);
     ctx.stroke();
     ctx.fill();
+    ctx.fillStyle = "#ffffff"
+    ctx.fillText(Manager.users[index].name,centerX * gameConfig.scaleFactor - 40 * gameConfig.scaleFactor,centerY * gameConfig.scaleFactor + 15 * gameConfig.scaleFactor);
     ctx.closePath();
 
     //draw clones
@@ -702,8 +767,8 @@ function drawFoods(){
   }
 };
 function drawBackground(){
-  ctx.fillStyle = "#11ff11";
-  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = "#70ccc4";
+  ctx.globalAlpha = 0.6;
   var posX = -gameConfig.userOffset.x * gameConfig.scaleFactor;
   var posY = -gameConfig.userOffset.y * gameConfig.scaleFactor;
   var sizeW = gameConfig.CANVAS_MAX_SIZE.width * gameConfig.scaleFactor;
@@ -717,14 +782,14 @@ function drawGrid(){
   ctx.globalAlpha = 0.15;
   ctx.beginPath();
 
-  for(var x = - gameConfig.userOffset.x - gameConfig.canvasSize.width/gameConfig.scaleFactor; x<=gameConfig.CANVAS_MAX_SIZE.width/gameConfig.scaleFactor; x += gameConfig.CANVAS_MAX_LOCAL_SIZE.width/32){
+  for(var x = - gameConfig.userOffset.x; x<=gameConfig.CANVAS_MAX_SIZE.width/gameConfig.scaleFactor; x += gameConfig.CANVAS_MAX_LOCAL_SIZE.width/32){
     if(util.isXInCanvas(x, gameConfig)){
       ctx.moveTo(x * gameConfig.scaleFactor, 0);
       ctx.lineTo(x * gameConfig.scaleFactor, gameConfig.canvasSize.height);
     }
   };
 
-  for(var y = - gameConfig.userOffset.y - gameConfig.canvasSize.height/gameConfig.scaleFactor; y<=gameConfig.CANVAS_MAX_SIZE.height/gameConfig.scaleFactor; y += gameConfig.CANVAS_MAX_LOCAL_SIZE.height/20){
+  for(var y = - gameConfig.userOffset.y; y<=gameConfig.CANVAS_MAX_SIZE.height/gameConfig.scaleFactor; y += gameConfig.CANVAS_MAX_LOCAL_SIZE.height/20){
     if(util.isYInCanvas(y, gameConfig)){
       ctx.moveTo(0, y * gameConfig.scaleFactor);
       ctx.lineTo(gameConfig.canvasSize.width, y * gameConfig.scaleFactor);
@@ -754,14 +819,14 @@ function documentAddEvent(){
   }, false);
 };
 function calcOffset(){
-  var userCenterX = Manager.users[gameConfig.userID].position.x + Manager.users[gameConfig.userID].size.width;
-  var userCenterY = Manager.users[gameConfig.userID].position.y + Manager.users[gameConfig.userID].size.height;
+  var userCenterX = Manager.users[gameConfig.userID].position.x + Manager.users[gameConfig.userID].size.width/2;
+  var userCenterY = Manager.users[gameConfig.userID].position.y + Manager.users[gameConfig.userID].size.height/2;
   var clonesCenterX = 0;
   var clonesCenterY = 0;
   var cloneCount = Manager.users[gameConfig.userID].clones.length;
   for(var i=0; i<cloneCount; i++){
-    clonesCenterX += Manager.users[gameConfig.userID].clones[i].position.x + Manager.users[gameConfig.userID].clones[i].size.width * gameConfig.scaleFactor/2;
-    clonesCenterY += Manager.users[gameConfig.userID].clones[i].position.y + Manager.users[gameConfig.userID].clones[i].size.height * gameConfig.scaleFactor/2;
+    clonesCenterX += Manager.users[gameConfig.userID].clones[i].position.x + Manager.users[gameConfig.userID].clones[i].size.width/2;
+    clonesCenterY += Manager.users[gameConfig.userID].clones[i].position.y + Manager.users[gameConfig.userID].clones[i].size.height/2;
   }
 
   var centerX = (userCenterX + clonesCenterX) / (cloneCount + 1);

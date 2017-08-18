@@ -61,28 +61,32 @@ io.on('connection', function(socket){
   var user = new User(socket.id);
   var updateUserInterval = false;
 
-  socket.on('reqStartGame', function(){
+  socket.on('reqStartGame', function(userName){
+    if(util.checkNameIsValid(userName)){
+      // user init and join game
+      GM.initializeUser(user, userName);
+      GM.joinUser(user);
 
-    // user init and join game
-    GM.initializeUser(user);
-    GM.joinUser(user);
+      //update user data
+      if(!updateUserInterval){
+        updateUserInterval = setInterval(function(){ GM.updateUser(user); }, INTERVAL_TIMER);
+      }
 
-    //update user data
-    if(!updateUserInterval){
-      updateUserInterval = setInterval(function(){ GM.updateUser(user); }, INTERVAL_TIMER);
+      var userData = GM.updateDataSetting(user);
+      //send users user joined game
+      socket.broadcast.emit('userJoined', userData);
+
+      var userDatas = GM.updateDataSettings();
+      var foodsDatas = GM.updateFoodsDataSettings();
+      var virusesDatas = GM.updateVirusesDataSettings();
+      console.log(userDatas);
+
+      socket.emit('setSyncUser', userData);
+      socket.emit('resStartGame', userDatas, foodsDatas, virusesDatas);
+    }else{
+      socket.emit('rename');
+      socket.disconnect();
     }
-
-    var userData = GM.updateDataSetting(user);
-    //send users user joined game
-    socket.broadcast.emit('userJoined', userData);
-
-    var userDatas = GM.updateDataSettings();
-    var foodsDatas = GM.updateFoodsDataSettings();
-    var virusesDatas = GM.updateVirusesDataSettings();
-    console.log(userDatas);
-
-    socket.emit('setSyncUser', userData);
-    socket.emit('resStartGame', userDatas, foodsDatas, virusesDatas);
   });
 
   socket.on('reqMove', function(targetPosition){

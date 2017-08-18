@@ -57,19 +57,13 @@ exports.rotate = function(){
     this.direction += 360;
   }
 };
-
+exports.checkNameIsValid = function(name){
+  name.replace(/(<([^>]+)>)/ig, '').substring(0,25);
+  var expression = /^\w*$/;
+  return expression.exec(name);
+};
 //must use with bind or call method
 exports.move = function(addPos){
-  // if(this.targetPosition.x < this.size.width/2){
-  //   this.targetPosition.x = this.size.width/2;
-  // }else if(this.targetPosition.x > gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2){
-  //   this.targetPosition.x = gameConfig.CANVAS_MAX_SIZE.width + this.size.width/2;
-  // }
-  // if(this.targetPosition.y < this.size.height/2){
-  //   this.targetPosition.y = this.size.height/2;
-  // }else if(this.targetPosition.y > gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2){
-  //   this.targetPosition.y = gameConfig.CANVAS_MAX_SIZE.height + this.size.height/2;
-  // }
   //calculate dist with target
   var distX = this.targetPosition.x - this.center.x;
   var distY = this.targetPosition.y - this.center.y;

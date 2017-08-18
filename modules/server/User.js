@@ -6,6 +6,7 @@ var serverConfig = require('./serverConfig.json');
 function User(id){
   LivingEntity.call(this);
 
+  this.name = '';
   this.clones = [];
   this.cloneTimeout = [];
 
@@ -17,6 +18,9 @@ function User(id){
 User.prototype = Object.create(LivingEntity.prototype);
 User.prototype.constructor = User;
 
+User.prototype.setName = function(name){
+  this.name = name;
+};
 User.prototype.setMass = function(mass){
   this.mass = mass;
   var radius = SUtil.massToRadius(this.mass);
@@ -55,7 +59,7 @@ User.prototype.makeClone = function(cloneID){
     var cloneMass = this.mass/2;
     this.divideMass();
     var radius = SUtil.massToRadius(cloneMass);
-    var targetPosition = SUtil.calcCloneTargetPosition(this.position, this.direction, cloneMaxSpeed, radius);
+    var targetPosition = SUtil.calcCloneTargetPosition(this.center, this.direction, cloneMaxSpeed, radius);
     var clone = new Clone(this, this.objectID, cloneID, cloneMaxSpeed, targetPosition, cloneMass, radius);
 
     var thisClones = this.clones;
@@ -84,7 +88,7 @@ User.prototype.makeClone = function(cloneID){
         thisClones.splice(index, 1);
       }
     }
-    clone.setCenter();
+    clone.setStartPosition(this.position, this.size.width/2, this.direction);
     clone.moveClone();
 
     for(var i=this.clones.length; i>0; i--){

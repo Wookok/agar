@@ -175,15 +175,20 @@ GameManager.prototype.updateUser = function(user){
   }
 };
 //user initialize
-GameManager.prototype.initializeUser = function(user){
+GameManager.prototype.initializeUser = function(user, name){
   // check ID is unique
   var randomID = SUtil.generateRandomUniqueID('U', this.users);
   user.assignID(randomID);
+  user.setName(name);
 
-  user.setPosition(10, 10);
+  var radius = SUtil.massToRadius(serverConfig.baseMass);
+  var randomPos = SUtil.generateRandomPos(this.userTree, serverConfig.USER_MARGIN, serverConfig.USER_MARGIN,
+                  gameConfig.CANVAS_MAX_SIZE.width - serverConfig.USER_MARGIN, gameConfig.CANVAS_MAX_SIZE.height - serverConfig.USER_MARGIN,
+                  radius, serverConfig.USER_MARGIN);
+
+  user.setPosition(randomPos.x, randomPos.y);
 
   user.setRotateSpeed(serverConfig.baseMaxSpeed);
-  user.setMaxSpeed(serverConfig.baseRotateSpeed);
   user.setMass(serverConfig.baseMass);
   // user.onFusion = this.onUserFusion;
 };
@@ -271,13 +276,16 @@ GameManager.prototype.updateDataSettings = function(){
         clonesData.push({
           objectID : this.users[index].clones[i].objectID,
           position : this.users[index].clones[i].position,
-          size : this.users[index].clones[i].size
+          size : this.users[index].clones[i].size,
+          mass : this.users[index].clones[i].mass
         });
     }
     var tempUser = {
       objectID : index,
+      name : this.users[index].name,
       position : this.users[index].position,
       size : this.users[index].size,
+      mass : this.users[index].mass,
       clones : clonesData
     };
     userData.push(tempUser);
@@ -290,13 +298,16 @@ GameManager.prototype.updateDataSetting = function(user){
       clonesData.push({
         objectID : user.clones[i].objectID,
         position : user.clones[i].position,
-        size : user.clones[i].size
+        size : user.clones[i].size,
+        mass : user.clones[i].mass
       });
   }
   var updateUser = {
     objectID : user.objectID,
+    name : user.name,
     position : user.position,
     size : user.size,
+    mass : user.mass,
     clones : clonesData
   };
   return updateUser;

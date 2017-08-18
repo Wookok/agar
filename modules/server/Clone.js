@@ -28,6 +28,18 @@ function Clone(base, userID, id, maxSpeed, targetPosition, mass, radius){
 Clone.prototype = Object.create(LivingEntity.prototype);
 Clone.prototype.constructor = Clone;
 
+Clone.prototype.setStartPosition = function(userPosition, userRadius, userDirection){
+  var dist = userRadius/2;
+  var distX = dist * Math.cos(userDirection * Math.PI/180);
+  var distY = dist * Math.sin(userDirection * Math.PI/180);
+
+  var newPos = {
+    x : userPosition.x + distX,
+    y : userPosition.y + distY
+  };
+  this.position = newPos;
+  this.setCenter();
+};
 Clone.prototype.addMass = function(mass){
   this.mass += mass;
   var radius = SUtil.massToRadius(this.mass);
@@ -40,8 +52,6 @@ Clone.prototype.addMass = function(mass){
 };
 Clone.prototype.moveClone = function(){
   this.setSpeed();
-  this.position.x += this.speed.x;
-  this.position.y += this.speed.y;
   this.changeState(gameConfig.OBJECT_STATE_MOVE);
 };
 Clone.prototype.checkChangeAble = function(){

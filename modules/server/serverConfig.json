@@ -2,11 +2,11 @@
   "minMaxSpeed" : 3,
   "baseMaxSpeed" : 20,
   "baseRotateSpeed" : 30,
-  "baseMass" : 20,
+  "baseMass" : 200,
 
-  "cloneChangeableTime" : 1,
-  "cloneSpeedRate" : 1.2,
-  "cloneFusionTime" : 2.5,
+  "cloneChangeableTime" : 1.5,
+  "cloneSpeedRate" : 2,
+  "cloneFusionTime" : 4,
   "cloneableMass" : 200,
 
   "COLLISION_WITH_FOOD" : 1,
@@ -14,6 +14,8 @@
   "COLLISION_WITH_VIRUS" : 3,
 
   "collisionFactor" : 1.2,
+
+  "USER_MARGIN" : 100,
 
   "VIRUS_INTERVAL_TIMER" : 10,
   "VIRUS_MIN_COUNT" : 5,
