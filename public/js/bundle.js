@@ -110,7 +110,7 @@ module.exports = User;
 
 },{}],3:[function(require,module,exports){
 module.exports={
-  "INTERVAL" : 30,
+  "INTERVAL" : 60,
 
   "CANVAS_MAX_SIZE" : {"width" : 6400 , "height" : 6400},
   "CANVAS_MAX_LOCAL_SIZE" : {"width" : 1600, "height" : 1000},
