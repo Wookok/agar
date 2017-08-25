@@ -9,6 +9,11 @@ var CManager = function(){
 };
 
 CManager.prototype = {
+	clearGame : function(){
+		this.users = [];
+		this.foods = [];
+		this.viruses = [];
+	},
 	setUser : function(userData){
 		if(!(userData.objectID in this.users)){
 			var tempUser = new User(userData, this.gameConfig);
@@ -78,17 +83,19 @@ CManager.prototype = {
 		}
 	},
 	updateUserData : function(userData){
-		this.users[userData.objectID].position = userData.position;
-		this.users[userData.objectID].size = userData.size;
-		this.users[userData.objectID].mass = userData.mass;
-		this.users[userData.objectID].clones = [];
-		for(var i=0; i<Object.keys(userData.clones).length; i++){
-			this.users[userData.objectID].clones.push({
-				objectID : userData.clones[i].objectID,
-				position : userData.clones[i].position,
-				mass : userData.clones[i].mass,
-				size : userData.clones[i].size
-			});
+		if(userData.objectID in this.users){
+			this.users[userData.objectID].position = userData.position;
+			this.users[userData.objectID].size = userData.size;
+			this.users[userData.objectID].mass = userData.mass;
+			this.users[userData.objectID].clones = [];
+			for(var i=0; i<Object.keys(userData.clones).length; i++){
+				this.users[userData.objectID].clones.push({
+					objectID : userData.clones[i].objectID,
+					position : userData.clones[i].position,
+					mass : userData.clones[i].mass,
+					size : userData.clones[i].size
+				});
+			}
 		}
 	}
 };

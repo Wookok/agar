@@ -57,6 +57,7 @@ User.prototype.makeClone = function(cloneID){
   if(SUtil.checkToCloneable(this.mass)){
     var cloneMaxSpeed = SUtil.calcCloneSpeed(this.maxSpeed);
     var cloneMass = this.mass/2;
+    var cloneID = SUtil.generateRandomUniqueID('C', this.clones);
     this.divideMass();
     var radius = SUtil.massToRadius(cloneMass);
     var targetPosition = SUtil.calcCloneTargetPosition(this.center, this.direction, cloneMaxSpeed, radius);
@@ -87,7 +88,7 @@ User.prototype.makeClone = function(cloneID){
       if(index !== -1){
         thisClones.splice(index, 1);
       }
-    }
+    };
     clone.setStartPosition(this.position, this.size.width/2, this.direction);
     clone.moveClone();
 
@@ -113,6 +114,12 @@ User.prototype.makeClone = function(cloneID){
         };
         clonesClone.onFusion = function(){
           thisUser.addMass(clonesClone.mass);
+          var index = thisClones.indexOf(clonesClone);
+          if(index !== -1){
+            thisClones.splice(index, 1);
+          }
+        };
+        clonesClone.onDestroy = function(){
           var index = thisClones.indexOf(clonesClone);
           if(index !== -1){
             thisClones.splice(index, 1);
@@ -196,6 +203,12 @@ User.prototype.makeOnlyClonesClone = function(cloneID){
     };
     clonesClone.onFusion = function(){
       thisUser.addMass(clonesClone.mass);
+      var index = thisClones.indexOf(clonesClone);
+      if(index !== -1){
+        thisClones.splice(index, 1);
+      }
+    };
+    clonesClone.onDestroy = function(){
       var index = thisClones.indexOf(clonesClone);
       if(index !== -1){
         thisClones.splice(index, 1);

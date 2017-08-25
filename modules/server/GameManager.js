@@ -184,12 +184,11 @@ GameManager.prototype.initializeUser = function(user, name){
   var radius = SUtil.massToRadius(serverConfig.baseMass);
   var randomPos = SUtil.generateRandomPos(this.userTree, serverConfig.USER_MARGIN, serverConfig.USER_MARGIN,
                   gameConfig.CANVAS_MAX_SIZE.width - serverConfig.USER_MARGIN, gameConfig.CANVAS_MAX_SIZE.height - serverConfig.USER_MARGIN,
-                  radius, serverConfig.USER_MARGIN);
-
+                  radius, serverConfig.USER_MARGIN, this.staticTree);
+  user.setMass(serverConfig.baseMass);
   user.setPosition(randomPos.x, randomPos.y);
 
   user.setRotateSpeed(serverConfig.baseMaxSpeed);
-  user.setMass(serverConfig.baseMass);
   // user.onFusion = this.onUserFusion;
 };
 GameManager.prototype.stopUser = function(user){
@@ -250,12 +249,12 @@ GameManager.prototype.findWinnerAndLoser = function(userID1, userID2, cloneID1, 
       return {
         winner : col1,
         loser : col2
-      }
+      };
     }else if(col2.size.width > col1.size.width * serverConfig.collisionFactor){
-      // return {
-      //   winner : col2,
-      //   loser : col1
-      // };
+      return {
+        winner : col2,
+        loser : col1
+      };
       return false;
     }else{
       console.log('nobody win');
@@ -385,9 +384,11 @@ function updateIntervalHandler(){
     var collisionObjs = util.checkCircleCollision(this.userTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
     if(collisionObjs.length > 0){
       for(var j=0; j<collisionObjs.length; j++){
-        if(collisionObjs[j].objectID){
+        console.log('collisionObjs userEles');
+        console.log(collisionObjs);
+        if(collisionObjs[j].cloneID){
           this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
-          'userOneID' : tempCollider.id, 'userTwoID' : collisionObjs[j].id, 'userTwoCloneID' : collisionObjs[j].objectID });
+          'userOneID' : tempCollider.id, 'userTwoID' : collisionObjs[j].id, 'userTwoCloneID' : collisionObjs[j].cloneID });
         }else{
           this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
           'userOneID' : tempCollider.id, 'userTwoID' : collisionObjs[j].id});
@@ -399,13 +400,17 @@ function updateIntervalHandler(){
     var tempCollider = this.userCloneEles[i];
     var collisionObjs = util.checkCircleCollision(this.userTree, tempCollider.x, tempCollider.y, tempCollider.width/2, tempCollider.id);
     if(collisionObjs.length > 0){
+      console.log('collisionObjs userCloneEles');
+      console.log(collisionObjs);
       for(var j=0; j<collisionObjs.length; j++){
-        if(collisionObjs[j].objectID){
-          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
-          'userOneID' : tempCollider.id, 'userOneCloneID' : tempCollider.objectID, 'userTwoID' : collisionObjs[j].id, 'userTwoCloneID' : collisionObjs[j].objectID });
-        }else{
-          this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
-          'userOneID' : tempCollider.id, 'userOneCloneID' : tempCollider.objectID, 'userTwoID' : collisionObjs[j].id});
+        if(tempCollider.cloneID){
+          if(collisionObjs[j].cloneID){
+            this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
+            'userOneID' : tempCollider.id, 'userOneCloneID' : tempCollider.cloneID, 'userTwoID' : collisionObjs[j].id, 'userTwoCloneID' : collisionObjs[j].cloneID });
+          }else{
+            this.affectedEles.push({'type' : serverConfig.COLLISION_WITH_USER,
+            'userOneID' : tempCollider.id, 'userOneCloneID' : tempCollider.cloneID, 'userTwoID' : collisionObjs[j].id});
+          }
         }
       }
     }
@@ -495,6 +500,7 @@ function affectIntervalHandler(){
         }
       }
     }else if(this.affectedEles[index].type === serverConfig.COLLISION_WITH_USER){
+      console.log(this.affectedEles[index]);
       if(this.affectedEles[index].userOneCloneID){
         if(this.affectedEles[index].userTwoCloneID){
           //case 1 (clone to clone)

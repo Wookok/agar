@@ -111,6 +111,7 @@ function game(){
 };
 //show end message and restart button
 function end(){
+  Manager.clearGame();
   changeState(gameConfig.GAME_STATE_START_SCENE);
 };
 
@@ -262,8 +263,8 @@ function drawBoard(){
   x.appendChild(t);
   board.appendChild(x);
 
-  if(rank.length > 3){
-    var length = 3;
+  if(rank.length > 10){
+    var length = 10;
   }else{
     length = rank.length;
   }
@@ -350,7 +351,8 @@ function drawUser(){
     ctx.stroke();
     ctx.fill();
     ctx.fillStyle = "#ffffff"
-    ctx.fillText(Manager.users[index].name,centerX * gameConfig.scaleFactor - 40 * gameConfig.scaleFactor,centerY * gameConfig.scaleFactor + 15 * gameConfig.scaleFactor);
+    ctx.textAlign = 'center';
+    ctx.fillText(Manager.users[index].name,centerX * gameConfig.scaleFactor,centerY * gameConfig.scaleFactor + 10 * gameConfig.scaleFactor);
     ctx.closePath();
 
     //draw clones
@@ -366,6 +368,10 @@ function drawUser(){
       ctx.arc(centerX * gameConfig.scaleFactor, centerY * gameConfig.scaleFactor, Manager.users[index].clones[i].size.width/2 * gameConfig.scaleFactor, 0, Math.PI * 2);
       ctx.stroke();
       ctx.fill();
+
+      ctx.fillStyle = "#ffffff"
+      ctx.textAlign = 'center';
+      ctx.fillText(Manager.users[index].name,centerX * gameConfig.scaleFactor,centerY * gameConfig.scaleFactor + 10 * gameConfig.scaleFactor);
       ctx.closePath();
     }
   }

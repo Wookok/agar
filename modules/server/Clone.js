@@ -71,6 +71,7 @@ Clone.prototype.setCloneEle = function(){
   };
 };
 Clone.prototype.destroy = function(){
+  console.log('destroy clone !!!! : ' + this.objectID);
   this.onDestroy();
 };
 Clone.prototype.fusion = function(){

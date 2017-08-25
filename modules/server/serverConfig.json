@@ -2,9 +2,9 @@
   "minMaxSpeed" : 3,
   "baseMaxSpeed" : 20,
   "baseRotateSpeed" : 30,
-  "baseMass" : 200,
+  "baseMass" : 150,
 
-  "cloneChangeableTime" : 1.5,
+  "cloneChangeableTime" : 1.4,
   "cloneSpeedRate" : 2,
   "cloneFusionTime" : 4,
   "cloneableMass" : 200,
@@ -13,15 +13,15 @@
   "COLLISION_WITH_USER" : 2,
   "COLLISION_WITH_VIRUS" : 3,
 
-  "collisionFactor" : 1.2,
+  "collisionFactor" : 1.05,
 
   "USER_MARGIN" : 100,
 
   "VIRUS_INTERVAL_TIMER" : 10,
-  "VIRUS_MIN_COUNT" : 5,
+  "VIRUS_MIN_COUNT" : 8,
   "VIRUS_ADD_PER_USER" : 0.1,
-  "VIRUS_MIN_RADIUS" : 150,
-  "VIRUS_MAX_RADIUS" : 200,
+  "VIRUS_MIN_RADIUS" : 100,
+  "VIRUS_MAX_RADIUS" : 130,
 
   "FOOD_MIN_COUNT" : 300,
   "FOOD_ADD_PER_USER" : 10,
