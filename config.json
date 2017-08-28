@@ -1,5 +1,3 @@
 {
-  "port": 52273,
-
-  "maxUserCount" : 50
+  "port": 80
 }
